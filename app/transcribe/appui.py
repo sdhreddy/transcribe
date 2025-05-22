@@ -130,6 +130,12 @@ class AppUI(ctk.CTk):
         self.continuous_response_button.grid(row=0, column=4, padx=10, pady=3, sticky="nsew")
         self.continuous_response_button.configure(command=self.freeze_unfreeze)
 
+        read_enabled = bool(config['General'].get('read_continuous_response', False))
+        read_text = "Read Responses Continuously" if not read_enabled else "Do Not Read Responses Continuously"
+        self.continuous_read_button = ctk.CTkButton(self.bottom_frame, text=read_text)
+        self.continuous_read_button.grid(row=0, column=5, padx=10, pady=3, sticky="nsew")
+        self.continuous_read_button.configure(command=self.toggle_continuous_read)
+
         self.response_now_button = ctk.CTkButton(self.bottom_frame, text="Suggest Response Now")
         self.response_now_button.grid(row=1, column=4, padx=10, pady=3, sticky="nsew")
         self.response_now_button.configure(command=self.get_response_now)
@@ -405,6 +411,20 @@ class AppUI(ctk.CTk):
             )
         except Exception as e:
             logger.error(f"Error toggling responder state: {e}")
+
+    def toggle_continuous_read(self):
+        """Toggle automatic reading aloud of responses"""
+        logger.info(AppUI.toggle_continuous_read.__name__)
+        try:
+            cur_val = self.global_vars.responder.config['General'].get('read_continuous_response', False)
+            new_val = not cur_val
+            self.global_vars.responder.config['General']['read_continuous_response'] = new_val
+            configuration.Config.load_alter_save('General', 'read_continuous_response', new_val)
+            self.continuous_read_button.configure(
+                text="Read Responses Continuously" if not new_val else "Do Not Read Responses Continuously"
+            )
+        except Exception as e:
+            logger.error(f"Error toggling continuous read: {e}")
 
     def enable_disable_speaker(self):
         """Toggles the state of speaker

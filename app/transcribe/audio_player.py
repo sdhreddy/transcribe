@@ -57,6 +57,7 @@ class AudioPlayer:
         while self.stop_loop is False:
             if self.speech_text_available.is_set() and self.read_response:
                 self.speech_text_available.clear()
+                self.read_response = False
                 speech = self._get_speech_text()
                 final_speech = self._process_speech_text(speech)
 
@@ -66,7 +67,6 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.play_audio(speech=final_speech, lang=lang_code)
-                self.read_response = False
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
