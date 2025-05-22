@@ -40,6 +40,7 @@ class TestGPTResponderReadContinuous(unittest.TestCase):
         self.assertTrue(self.context.audio_player_var.speech_text_available.is_set())
 
 
+
     @patch.object(GPTResponder, '_save_response_to_file')
     @patch.object(GPTResponder, 'llm_client')
     def test_generate_response_selected_text_sets_event(self, mock_client, mock_save):

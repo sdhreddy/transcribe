@@ -7,6 +7,5 @@ Optionally users can disable continuous responses and get Audio responses in add
 ![Screenshot](../assets/ReadResponses.png)
 
 
-To automatically read responses aloud when continuous responses or selected-text responses are enabled, set `read_continuous_response` to `Yes` in your `override.yaml` or `parameters.yaml` file.
-
+To automatically read responses aloud when continuous responses are enabled, set `read_continuous_response` to `Yes` in your `override.yaml` or `parameters.yaml` file.
 
