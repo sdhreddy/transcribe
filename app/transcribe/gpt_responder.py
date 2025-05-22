@@ -314,6 +314,11 @@ class GPTResponder:
 
         self._save_response_to_file(processed_response)
 
+        if self.config['General'].get('read_continuous_response', False):
+            context = self.conversation.context
+            context.set_read_response(True)
+            context.audio_player_var.speech_text_available.set()
+
         return processed_response
 
     def _save_response_to_file(self, text: str):

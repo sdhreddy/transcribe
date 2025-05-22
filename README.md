@@ -42,7 +42,9 @@ Transcribe provides real time transcription for microphone and speaker output. I
 - Save chat history
 - Response Audio
 
-Continuous responses can be read aloud automatically by setting `read_continuous_response` to `Yes` in the configuration files.
+
+Continuous responses and selected-text responses can be read aloud automatically by setting `read_continuous_response` to `Yes` in the configuration files.
+
 
 ## Response Generation ##
 Response generation requires a paid account with an API Key for an OpenAI API compatible provider like 

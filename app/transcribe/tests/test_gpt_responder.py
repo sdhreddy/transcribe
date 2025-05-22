@@ -40,6 +40,18 @@ class TestGPTResponderReadContinuous(unittest.TestCase):
         self.assertTrue(self.context.audio_player_var.speech_text_available.is_set())
 
 
+    @patch.object(GPTResponder, '_save_response_to_file')
+    @patch.object(GPTResponder, 'llm_client')
+    def test_generate_response_selected_text_sets_event(self, mock_client, mock_save):
+        stream_chunk = MagicMock()
+        stream_chunk.choices = [MagicMock(delta=MagicMock(content='hi'))]
+        mock_client.chat.completions.create.return_value = [stream_chunk]
+        self.responder.generate_response_for_selected_text('text')
+        self.context.set_read_response.assert_called_with(True)
+        self.assertTrue(self.context.audio_player_var.speech_text_available.is_set())
+
+
+
 if __name__ == '__main__':
     unittest.main()
 
