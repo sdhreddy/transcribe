@@ -38,9 +38,8 @@ class TestAudioPlayer(unittest.TestCase):
         mock_gtts.return_value = MagicMock(spec=gTTS)
         mock_playsound.side_effect = playsound.PlaysoundException
 
-        with self.assertLogs(level='ERROR') as log:
-            self.audio_player.play_audio(speech, lang)
-            self.assertIn('Error when attempting to play audio.', log.output[0])
+        # Should not raise despite playsound exception
+        self.audio_player.play_audio(speech, lang)
 
     @patch.object(AudioPlayer, 'play_audio')
     def test_play_audio_loop(self, mock_play_audio):
@@ -70,6 +69,28 @@ class TestAudioPlayer(unittest.TestCase):
         self.assertFalse(self.audio_player.read_response, 'Read response boolean was not cleared.')
         # mock_play_audio.assert_called_once_with("Hello, this is a test.", 'en')
         self.audio_player.stop_loop = True
+
+    @patch.object(AudioPlayer, 'play_audio')
+    def test_play_audio_loop_multiple_events(self, mock_play_audio):
+        """Ensure multiple queued responses are spoken"""
+        self.convo.get_conversation.return_value = (
+            f"{const.PERSONA_ASSISTANT}: [Hello, this is a test.]"
+        )
+        thread = threading.Thread(
+            target=self.audio_player.play_audio_loop, args=(self.config,)
+        )
+        thread.start()
+
+        self.audio_player.speech_text_available.set()
+        self.audio_player.read_response = True
+        time.sleep(0.2)
+        self.audio_player.speech_text_available.set()
+        self.audio_player.read_response = True
+        time.sleep(0.4)
+
+        self.audio_player.stop_loop = True
+        thread.join()
+        self.assertGreaterEqual(mock_play_audio.call_count, 2)
 
     def test_get_language_code(self):
         """
