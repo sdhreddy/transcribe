@@ -250,7 +250,14 @@ class GPTResponder:
         if not self.enabled:
             return ''
 
-        return self.generate_response_from_transcript_no_check()
+        response = self.generate_response_from_transcript_no_check()
+
+        if response and self.config['General'].get('read_continuous_response', False):
+            context = self.conversation.context
+            context.set_read_response(True)
+            context.audio_player_var.speech_text_available.set()
+
+        return response
 
     def generate_response_for_selected_text(self, text: str):
         """Ping LLM to get a suggested response right away.
