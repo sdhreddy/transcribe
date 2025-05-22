@@ -96,7 +96,7 @@ General:
 # The combination of system_prompt, initial_convo is used to create a multi turn prompt message for LLM.
 # system_prompt_1, systen_prompt_2 are here as samples of other possible prompts.
 # Only the content of system_prompt parameter will be used
-  system_prompt: “You are a Software Quality Automation Manager and expert IT consultant.  Read the entire conversation history provided and then give a single, clear recommendation, output crisp line (5-12 words) for me to say."
+  system_prompt: “You are IT expert.  Read the entire conversation history provided and then give a single, clear recommendation, output crisp line (5-12 words) for me to say."
 #  system_prompt: "You are an expert at Basketball and helping others learn about basketball. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 #  system_prompt: "You are an expert at Fantasy Football and helping others learn about Fantasy football. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 #  system_prompt: “You are an expert Agile Coach and are interviewing for a position. Respond in detail to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
@@ -116,7 +116,7 @@ General:
       # content: "I am V, I want to learn about Fantasy Football"
       # content: "I am V, I want to learn about Basketball"
       # content: "Hey assistant, how are you doing today, I want to talk about Agile coaching today."
-      content: Hey assistant, please act as a Senior Software Quality Manager with deep IT expertise. As you listen to the discussion with colleague - Generate short, direct response option that I can say offering your expert insight or suggestion. Then, in a separate paragraph, add extra context, clarifications, or follow-up questions that might help me dive deeper into the topic if needed, including any additional information, definitions, or explanations on tools or concepts so I have sufficient background. This should also be short, direct response.
+      content: Hey assistant,  you have deep IT expertise. As you listen to the discussion - Generate short, direct response option that I can say offering your expert insight or suggestion. Then, in a separate paragraph, add extra context, clarifications, or follow-up questions that might help me dive deeper into the topic if needed, including any additional information, definitions, or explanations on tools or concepts so I have sufficient background. This should also be short, direct response.
     second:
       role: "assistant"
       # content: "Hello, V. That's awesome! What do you want to know about basketball"
