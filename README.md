@@ -43,7 +43,7 @@ Transcribe provides real time transcription for microphone and speaker output. I
 - Response Audio
 
 
-Continuous responses can be read aloud automatically by setting `read_continuous_response` to `Yes` in the configuration files.
+Continuous responses can be read aloud automatically using the **Read Responses Continuously** button or by setting `read_continuous_response` to `Yes` in the configuration files.
 
 
 ## Response Generation ##
