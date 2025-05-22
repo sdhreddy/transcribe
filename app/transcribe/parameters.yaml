@@ -1,5 +1,5 @@
 OpenAI:
-  api_key: 'API_KEY'
+  api_key: 
   base_url: 'https://api.openai.com/v1'
 # Possible model values
 # gpt-4o, gpt-4o-2024-05-13
@@ -13,7 +13,7 @@ OpenAI:
 # https://platform.openai.com/docs/models
 # We do not support o3-mini out of the box, because it does not support
 # some of the parameters for several API
-  ai_model: gpt-4o-mini
+  ai_model: gpt-4.1-mini
 # Local model file to use for transcription.
 # Can also be specified using the -m parameter on command line of the application
   local_transcripton_model_file: 'base'
@@ -81,6 +81,7 @@ General:
   disable_speaker: False
   stt: whisper
   continuous_response: True
+  continuous_read: Yes
   # The interval at which to ping the LLM for response
   llm_response_interval: 10
 
@@ -95,12 +96,12 @@ General:
 # The combination of system_prompt, initial_convo is used to create a multi turn prompt message for LLM.
 # system_prompt_1, systen_prompt_2 are here as samples of other possible prompts.
 # Only the content of system_prompt parameter will be used
-  system_prompt: "You are a casual pal, genuinely interested in the conversation at hand. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
+  system_prompt: “You are a Software Quality Automation Manager and expert IT consultant.  Read the entire conversation history provided and then give a single, clear recommendation, output crisp line (5-12 words) for me to say."
 #  system_prompt: "You are an expert at Basketball and helping others learn about basketball. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 #  system_prompt: "You are an expert at Fantasy Football and helping others learn about Fantasy football. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 #  system_prompt: “You are an expert Agile Coach and are interviewing for a position. Respond in detail to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 
-  summary_prompt: 'Create a summary of the following text'
+  summary_prompt: 'create a summary of the following text, highlight key points.  Also answer any questions asked by the colleague directly or indirectly based on the whole conversation. Then provide suggestions and questions for discussions that I can use. Keep them concise—one sentence or even a few keywords. Keep all suggestions short and clear.'
 
 # When we anticipate to talk about a specific topic, seed the content with some conversation
 # Application expects role "You" to have 1 entry
@@ -115,7 +116,7 @@ General:
       # content: "I am V, I want to learn about Fantasy Football"
       # content: "I am V, I want to learn about Basketball"
       # content: "Hey assistant, how are you doing today, I want to talk about Agile coaching today."
-      content: Hey assistant, how are you doing today, I am in mood of a casual conversation.
+      content: Hey assistant, please act as a Senior Software Quality Manager with deep IT expertise. As you listen to the discussion with colleague - Generate short, direct response option that I can say offering your expert insight or suggestion. Then, in a separate paragraph, add extra context, clarifications, or follow-up questions that might help me dive deeper into the topic if needed, including any additional information, definitions, or explanations on tools or concepts so I have sufficient background. This should also be short, direct response.
     second:
       role: "assistant"
       # content: "Hello, V. That's awesome! What do you want to know about basketball"

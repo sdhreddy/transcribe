@@ -1,0 +1,1 @@
+-e "sqlalchemy\ngtts\nopenai\ncustomtkinter\npytest" 
