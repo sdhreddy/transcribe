@@ -1,6 +1,12 @@
 import unittest
 from tkinter import Tk
-# from customtkinter import CTk
+import pytest
+# Skip the entire module if a display isn't available
+try:
+    test_root = Tk()
+    test_root.destroy()
+except Exception:
+    pytest.skip("Tkinter display not available", allow_module_level=True)
 
 # Assuming SelectableTextComponent is defined in a module named selectable_text_component
 from app.transcribe.uicomp.selectable_text import SelectableText
