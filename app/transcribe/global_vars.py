@@ -4,10 +4,9 @@ import sys
 import os
 import queue
 import datetime
-from audio_transcriber import AudioTranscriber
-import audio_player
-sys.path.append('../..')
-import conversation  # noqa: E402 pylint: disable=C0413
+from .audio_transcriber import AudioTranscriber
+from . import audio_player
+from . import conversation  # noqa: E402 pylint: disable=C0413
 from sdk import audio_recorder as ar  # noqa: E402 pylint: disable=C0413
 from tsutils import Singleton, task_queue, utilities  # noqa: E402 pylint: disable=C0413
 

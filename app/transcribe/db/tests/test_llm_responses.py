@@ -2,7 +2,12 @@ import unittest
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from llm_responses import LLMResponses  # Replace 'your_module' with the actual module name
+
+from app.transcribe.db.llm_responses import LLMResponses
+
+# Import from the parent package so tests run without installing the package
+from ..llm_responses import LLMResponses
+
 
 
 class TestLLMResponses(unittest.TestCase):
@@ -40,7 +45,14 @@ class TestLLMResponses(unittest.TestCase):
         response_id = self.llm_responses.insert_response(
             invocation_id=invocation_id,
             conversation_id=conversation_id,
+
             text=insert_text
+
+            text=insert_text,
+
+            text=insert_text
+
+
         )
 
         # Verify insertion
@@ -63,7 +75,15 @@ class TestLLMResponses(unittest.TestCase):
         first_response_id = self.llm_responses.insert_response(
             invocation_id=invocation_id,
             conversation_id=conversation_id,
+
             text=insert_text
+
+
+            text=insert_text,
+
+            text=insert_text
+
+
         )
 
         invocation_id = 3
@@ -73,7 +93,14 @@ class TestLLMResponses(unittest.TestCase):
         second_response_id = self.llm_responses.insert_response(
             invocation_id=invocation_id,
             conversation_id=conversation_id,
+
             text=insert_text
+
+            text=insert_text,
+
+            text=insert_text
+
+
         )
 
         self.assertEqual(second_response_id, first_response_id + 1)

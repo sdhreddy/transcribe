@@ -8,10 +8,15 @@ import time
 import tempfile
 import threading
 import gtts
+
 import simpleaudio
 import subprocess
 from conversation import Conversation
 import constants
+
+from .conversation import Conversation
+from . import constants
+
 from tsutils import app_logging as al
 from tsutils.language import LANGUAGES_DICT
 
@@ -22,7 +27,7 @@ class AudioPlayer:
     """Play text to audio.
     """
 
-    def __init__(self, convo: Conversation):
+    def __init__(self, convo: Conversation, global_vars=None):
         logger.info(self.__class__.__name__)
         self.speech_text_available = threading.Event()
         self.conversation = convo
@@ -33,6 +38,7 @@ class AudioPlayer:
         self._play_obj = None
         self.play_thread = None
 
+
     def _play_audio(self, speech: str, lang: str):
         """Internal method to play text as audio."""
         logger.info(f'{self.__class__.__name__} - Playing audio')
@@ -40,6 +46,29 @@ class AudioPlayer:
         wav_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.wav')
         os.close(mp3_file[0])
         os.close(wav_file[0])
+
+        self.global_vars = global_vars
+
+        # Flag to indicate when audio is being played back
+        self.is_playing = False
+
+
+    def play_audio(self, speech: str, lang: str):
+        """Play text as audio.
+        This is a blocking method and will return when audio playback is complete.
+        For large audio text, this could take several minutes.
+        """
+        logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        # Import here to avoid circular dependency during initialization
+        from global_vars import T_GLOBALS as global_vars
+
+        self.is_playing = True
+        speaker_recorder = getattr(global_vars, 'speaker_audio_recorder', None)
+        prev_enabled = None
+        if speaker_recorder is not None:
+            prev_enabled = speaker_recorder.enabled
+            speaker_recorder.enabled = False
+
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
             audio_obj.save(mp3_file[1])
@@ -54,6 +83,7 @@ class AudioPlayer:
             logger.error('Error when attempting to play audio.', exc_info=True)
             logger.info(play_ex)
         finally:
+
             self.is_playing = False
             self._play_obj = None
             try:
@@ -77,6 +107,12 @@ class AudioPlayer:
         self.is_playing = False
         self.read_response = False
 
+            if speaker_recorder is not None and prev_enabled is not None:
+                speaker_recorder.enabled = prev_enabled
+            self.is_playing = False
+            os.remove(temp_audio_file[1])
+
+
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
         """
@@ -95,9 +131,15 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
+
                 self.start_playback(speech=final_speech, lang=lang_code)
                 while self.is_playing and self.stop_loop is False:
                     time.sleep(0.1)
+
+                if self.global_vars is not None:
+                    self.global_vars.last_tts_response = speech
+                self.play_audio(speech=final_speech, lang=lang_code)
+
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:

@@ -1,12 +1,19 @@
 import sys
 import time
 import atexit
+
 import app_utils as au
 from args import create_args, update_args_config, handle_args_batch_tasks
 from global_vars import T_GLOBALS
 from appui import AppUI
 from audio_player import AudioPlayer
 sys.path.append('../..')
+
+from . import app_utils as au
+from .args import create_args, update_args_config, handle_args_batch_tasks
+from .global_vars import T_GLOBALS
+from .appui import AppUI
+
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413
 from tsutils import utilities as u  # noqa: E402 pylint: disable=C0413
