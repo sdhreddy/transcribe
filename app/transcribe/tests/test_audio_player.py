@@ -10,6 +10,8 @@ import time
 import threading
 from gtts import gTTS
 import playsound
+import sys
+from types import ModuleType
 # sys.path.append('app/transcribe')
 from app.transcribe.audio_player import AudioPlayer
 import app.transcribe.conversation as c
@@ -24,6 +26,17 @@ class TestAudioPlayer(unittest.TestCase):
         self.convo = MagicMock(spec=c.Conversation)
         self.audio_player = AudioPlayer(convo=self.convo)
         self.config = {'OpenAI': {'response_lang': 'english'}, 'english': 'en'}
+        # Provide a dummy global_vars module expected by AudioPlayer
+        mock_module = ModuleType('global_vars')
+        mock_globals = MagicMock()
+        mock_globals.audio_player_var = None
+        mock_globals.speaker_audio_recorder = MagicMock(enabled=True)
+        mock_module.T_GLOBALS = mock_globals
+        sys.modules['global_vars'] = mock_module
+
+    def tearDown(self):
+        if 'global_vars' in sys.modules:
+            del sys.modules['global_vars']
 
     @patch('gtts.gTTS')
     @patch('playsound.playsound')
