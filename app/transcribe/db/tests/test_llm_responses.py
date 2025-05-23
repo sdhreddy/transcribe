@@ -3,6 +3,10 @@ from sqlalchemy.sql import text
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 
+# Import from the db package
+from db.llm_responses import LLMResponses
+
+
 from app.transcribe.db.llm_responses import LLMResponses
 
 # Import from the parent package so tests run without installing the package
@@ -50,7 +54,9 @@ class TestLLMResponses(unittest.TestCase):
 
             text=insert_text,
 
+
             text=insert_text
+
 
 
         )
@@ -81,7 +87,9 @@ class TestLLMResponses(unittest.TestCase):
 
             text=insert_text,
 
+
             text=insert_text
+
 
 
         )
@@ -97,6 +105,7 @@ class TestLLMResponses(unittest.TestCase):
             text=insert_text
 
             text=insert_text,
+
 
             text=insert_text
 

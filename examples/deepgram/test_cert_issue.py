@@ -1,6 +1,13 @@
 
 # pip install cryptography
 
+"""Minimal test for DST certificate helper."""
+
+import pytest
+
+pytest.skip("Windows-specific certificate check", allow_module_level=True)
+
+
 import pytest
 pytest.skip("cryptography not installed", allow_module_level=True)
 
@@ -21,6 +28,7 @@ Skipping the module ensures the rest of the test suite runs offline.
 import pytest
 
 pytest.skip("cryptography not available for example test", allow_module_level=True)
+
 
 
 import _ssl

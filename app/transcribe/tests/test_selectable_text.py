@@ -1,3 +1,13 @@
+
+import os
+import unittest
+from tkinter import Tk
+import pytest
+
+if not os.environ.get("DISPLAY"):
+    pytest.skip("requires a display", allow_module_level=True)
+# from customtkinter import CTk
+
 # This widget requires a display. Skip the tests if running headless.
 import os
 import unittest
@@ -12,6 +22,7 @@ try:
     test_root.destroy()
 except Exception:
     pytest.skip("Tkinter display not available", allow_module_level=True)
+
 
 
 # Assuming SelectableTextComponent is defined in a module named selectable_text_component

@@ -1,6 +1,9 @@
 import unittest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
+# Import from the db package; test path setup allows this import
+from db.app_invocations import Invocation, ApplicationInvocations
+
 
 from app.transcribe.db.app_invocations import (
     Invocation,
@@ -9,6 +12,7 @@ from app.transcribe.db.app_invocations import (
 
 # Import from the parent package to avoid relying on global package installation
 from ..app_invocations import Invocation, ApplicationInvocations
+
 
 
 class TestApplicationInvocations(unittest.TestCase):
