@@ -861,8 +861,10 @@ def update_response_ui(responder: gr.GPTResponder,
         write_in_textbox(textbox, response)
         textbox.configure(state="disabled")
         textbox.see("end")
-        if global_vars_module.continuous_read and response != global_vars_module.last_tts_response:
-            global_vars_module.last_tts_response = response
+        if (global_vars_module.continuous_read
+                and responder.stream_done
+                and response != global_vars_module.last_tts_response
+                and not global_vars_module.read_response):
             global_vars_module.set_read_response(True)
             global_vars_module.audio_player_var.speech_text_available.set()
 

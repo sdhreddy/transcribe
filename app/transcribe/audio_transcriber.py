@@ -14,9 +14,8 @@ import wave
 import tempfile
 import pyaudiowpatch as pyaudio
 # from db import AppDB as appdb
-import conversation  # noqa: E402 pylint: disable=C0413
-import constants  # noqa: E402 pylint: disable=C0413
-sys.path.append('../..')
+from . import conversation  # noqa: E402 pylint: disable=C0413
+from . import constants  # noqa: E402 pylint: disable=C0413
 import custom_speech_recognition as sr  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413
 from tsutils import duration, utilities  # noqa: E402 pylint: disable=C0413
@@ -118,6 +117,11 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             logger.info(f'Transcribe Audio Queue. Current time: {datetime.datetime.utcnow()} '
                         f'- Time Spoken: {time_spoken} by : {who_spoke}, queue_backlog - '
                         f'{audio_queue.qsize()}')
+            # Skip processing speaker output while audio is playing back
+            if who_spoke == 'Speaker':
+                from global_vars import T_GLOBALS as global_vars
+                if global_vars.audio_player_var is not None and global_vars.audio_player_var.is_playing:
+                    continue
             self._update_last_sample_and_phrase_status(who_spoke, data, time_spoken)
             source_info = self.audio_sources_properties[who_spoke]
 

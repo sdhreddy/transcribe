@@ -144,11 +144,20 @@ class BaseRecorder:
             self.recorder.adjust_for_ambient_noise(self.source)
         print(f"[INFO] Completed ambient noise adjustment for {device_name}.")
 
-    def record_audio(self, audio_queue: queue.Queue):
-        """Start recording audion from the stream and add data to queue
+    def record_audio(self, audio_queue: queue.Queue, on_audio_callback=None):
+        """Start recording audio from the stream and add data to queue.
+
+        Args:
+            audio_queue: Queue where captured audio will be placed.
+            on_audio_callback: Optional callable executed when new audio is captured.
         """
         def record_callback(_, audio: sr.AudioData) -> None:
             if self.enabled:
+                if on_audio_callback is not None:
+                    try:
+                        on_audio_callback()
+                    except Exception:  # pylint: disable=broad-except
+                        pass
                 data = audio.get_raw_data()
                 audio_queue.put((self.source_name, data, datetime.utcnow()))
                 if self.audio_file_name:

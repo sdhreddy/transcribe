@@ -5,6 +5,16 @@ from sqlalchemy.orm import sessionmaker
 from db.app_invocations import Invocation, ApplicationInvocations
 
 
+from app.transcribe.db.app_invocations import (
+    Invocation,
+    ApplicationInvocations,
+)
+
+# Import from the parent package to avoid relying on global package installation
+from ..app_invocations import Invocation, ApplicationInvocations
+
+
+
 class TestApplicationInvocations(unittest.TestCase):
     """Unit tests for the ApplicationInvocations class."""
 
