@@ -1,6 +1,6 @@
 import unittest
 from tkinter import Tk
-# from customtkinter import CTk
+from tkinter import TclError
 
 # Assuming SelectableTextComponent is defined in a module named selectable_text_component
 from app.transcribe.uicomp.selectable_text import SelectableText
@@ -9,7 +9,10 @@ from app.transcribe.uicomp.selectable_text import SelectableText
 class TestSelectableText(unittest.TestCase):
     def setUp(self):
         # Set up a root window and the component for testing
-        self.root = Tk()
+        try:
+            self.root = Tk()
+        except TclError:
+            self.skipTest("Tk not available")
         self.root.withdraw()  # Hide the root window
         self.component = SelectableText(self.root)
         self.component.pack()

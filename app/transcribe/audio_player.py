@@ -7,8 +7,9 @@ import os
 import time
 import tempfile
 import threading
-import playsound
 import gtts
+import simpleaudio
+import subprocess
 from conversation import Conversation
 import constants
 from tsutils import app_logging as al
@@ -28,25 +29,53 @@ class AudioPlayer:
         self.temp_dir = tempfile.gettempdir()
         self.read_response = False
         self.stop_loop = False
+        self.is_playing = False
+        self._play_obj = None
+        self.play_thread = None
 
-    def play_audio(self, speech: str, lang: str):
-        """Play text as audio.
-        This is a blocking method and will return when audio playback is complete.
-        For large audio text, this could take several minutes.
-        """
-        logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+    def _play_audio(self, speech: str, lang: str):
+        """Internal method to play text as audio."""
+        logger.info(f'{self.__class__.__name__} - Playing audio')
+        mp3_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
+        wav_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.wav')
+        os.close(mp3_file[0])
+        os.close(wav_file[0])
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
-            temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
-            os.close(temp_audio_file[0])
-
-            audio_obj.save(temp_audio_file[1])
-            playsound.playsound(temp_audio_file[1])
-        except playsound.PlaysoundException as play_ex:
+            audio_obj.save(mp3_file[1])
+            subprocess.call([
+                'ffmpeg', '-y', '-i', mp3_file[1], wav_file[1]
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            wave_obj = simpleaudio.WaveObject.from_wave_file(wav_file[1])
+            self.is_playing = True
+            self._play_obj = wave_obj.play()
+            self._play_obj.wait_done()
+        except Exception as play_ex:  # pylint: disable=broad-except
             logger.error('Error when attempting to play audio.', exc_info=True)
             logger.info(play_ex)
         finally:
-            os.remove(temp_audio_file[1])
+            self.is_playing = False
+            self._play_obj = None
+            try:
+                os.remove(mp3_file[1])
+                os.remove(wav_file[1])
+            except OSError:
+                pass
+
+    def start_playback(self, speech: str, lang: str):
+        """Start audio playback asynchronously."""
+        self.play_thread = threading.Thread(target=self._play_audio, args=(speech, lang))
+        self.play_thread.start()
+
+    def stop_playback(self):
+        """Stop current playback if any."""
+        if self._play_obj is not None:
+            try:
+                self._play_obj.stop()
+            except Exception:  # pylint: disable=broad-except
+                pass
+        self.is_playing = False
+        self.read_response = False
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
@@ -66,7 +95,9 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
-                self.play_audio(speech=final_speech, lang=lang_code)
+                self.start_playback(speech=final_speech, lang=lang_code)
+                while self.is_playing and self.stop_loop is False:
+                    time.sleep(0.1)
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
