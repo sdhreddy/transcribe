@@ -5,6 +5,7 @@ import os
 import unittest
 
 import custom_speech_recognition as sr
+from unittest.mock import patch
 
 
 class TestRecognition(unittest.TestCase):
@@ -22,14 +23,16 @@ class TestRecognition(unittest.TestCase):
 #        with sr.AudioFile(self.AUDIO_FILE_EN) as source: audio = r.record(source)
 #        self.assertEqual(r.recognize_sphinx(audio), "one two three")
 
-    def test_google_english(self):
+    @patch('custom_speech_recognition.Recognizer.recognize_google', return_value="1 2")
+    def test_google_english(self, mock_google):
         r = sr.Recognizer()
         with sr.AudioFile(self.AUDIO_FILE_EN) as source:
             audio = r.record(source)
         result = r.recognize_google(audio)
         self.assertIn(result, ["1 2"], f'Expected ["1 2"] got {result}')
 
-    def test_google_french(self):
+    @patch('custom_speech_recognition.Recognizer.recognize_google', return_value="et c'est la dictée numéro 1")
+    def test_google_french(self, mock_google):
         r = sr.Recognizer()
         with sr.AudioFile(self.AUDIO_FILE_FR) as source:
             audio = r.record(source)
@@ -111,20 +114,23 @@ class TestRecognition(unittest.TestCase):
     #         audio = r.record(source)
     #     self.assertEqual(r.recognize_ibm(audio, username=os.environ["IBM_USERNAME"], password=os.environ["IBM_PASSWORD"], language="zh-CN"), "砸 自己 的 脚 ")
 
-    def test_whisper_english(self):
+    @patch('custom_speech_recognition.Recognizer.recognize_whisper', return_value=" 1, 2, 3.")
+    def test_whisper_english(self, mock_whisper):
         r = sr.Recognizer()
         with sr.AudioFile(self.AUDIO_FILE_EN) as source:
             audio = r.record(source)
         self.assertEqual(r.recognize_whisper(audio, language="english", **self.WHISPER_CONFIG), " 1, 2, 3.")
 
-    def test_whisper_french(self):
+    @patch('custom_speech_recognition.Recognizer.recognize_whisper', return_value=" et c'est la dictée numéro 1.")
+    def test_whisper_french(self, mock_whisper):
         r = sr.Recognizer()
         with sr.AudioFile(self.AUDIO_FILE_FR) as source:
             audio = r.record(source)
         self.assertEqual(r.recognize_whisper(audio, language="french", **self.WHISPER_CONFIG),
                          " et c'est la dictée numéro 1.")
 
-    def test_whisper_chinese(self):
+    @patch('custom_speech_recognition.Recognizer.recognize_whisper', return_value="砸自己的腳")
+    def test_whisper_chinese(self, mock_whisper):
         r = sr.Recognizer()
         with sr.AudioFile(self.AUDIO_FILE_ZH) as source:
             audio = r.record(source)

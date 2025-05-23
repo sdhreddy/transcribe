@@ -65,8 +65,8 @@ class AudioPlayer:
                     lang_code = self._get_language_code(new_lang)
                     lang = new_lang
 
-                self.play_audio(speech=final_speech, lang=lang_code)
                 self.read_response = False
+                self.play_audio(speech=final_speech, lang=lang_code)
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:

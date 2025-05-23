@@ -2,6 +2,6 @@
 
 Default option in Transcribe is to provide responses as text in the response window.
 
-Optionally users can disable continuous responses and get Audio responses in addition to text responses using the Suggest Response and Read button as displayed in the image below.
+Use the **Read Responses Continuously** toggle to automatically hear every AI response as it is generated. When this is disabled, you can still hear a single response using the **Suggest Response and Read** button shown in the image below.
 
 ![Screenshot](../assets/ReadResponses.png)
