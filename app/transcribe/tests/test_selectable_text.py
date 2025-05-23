@@ -1,5 +1,10 @@
+import os
 import unittest
 from tkinter import Tk
+import pytest
+
+if not os.environ.get("DISPLAY"):
+    pytest.skip("requires a display", allow_module_level=True)
 # from customtkinter import CTk
 
 # Assuming SelectableTextComponent is defined in a module named selectable_text_component

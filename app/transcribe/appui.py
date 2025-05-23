@@ -419,6 +419,9 @@ class AppUI(ctk.CTk):
         try:
             new_state = not self.global_vars.continuous_read
             self.global_vars.set_continuous_read(new_state)
+            config_obj = configuration.Config()
+            altered_config = {'General': {'continuous_read': new_state}}
+            config_obj.add_override_value(altered_config)
             self.capture_action(f'{"Enabled " if new_state else "Disabled "} continuous read aloud')
             self.continuous_read_button.configure(
                 text="Read Responses Continuously" if not new_state else "Do Not Read Responses Continuously"

@@ -1,4 +1,10 @@
 # pip install cryptography
+"""Minimal test for DST certificate helper."""
+
+import pytest
+
+pytest.skip("Windows-specific certificate check", allow_module_level=True)
+
 import _ssl
 from cryptography import x509
 
