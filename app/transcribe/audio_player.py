@@ -21,15 +21,19 @@ class AudioPlayer:
     """Play text to audio.
     """
 
-    def __init__(self, convo: Conversation):
+    def __init__(self, convo: Conversation, global_vars=None):
         logger.info(self.__class__.__name__)
         self.speech_text_available = threading.Event()
         self.conversation = convo
         self.temp_dir = tempfile.gettempdir()
         self.read_response = False
         self.stop_loop = False
+
+        self.global_vars = global_vars
+
         # Flag to indicate when audio is being played back
         self.is_playing = False
+
 
     def play_audio(self, speech: str, lang: str):
         """Play text as audio.
@@ -80,6 +84,8 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
+                if self.global_vars is not None:
+                    self.global_vars.last_tts_response = speech
                 self.play_audio(speech=final_speech, lang=lang_code)
             time.sleep(0.1)
 

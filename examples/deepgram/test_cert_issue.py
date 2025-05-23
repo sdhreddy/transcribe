@@ -1,3 +1,12 @@
+
+# pip install cryptography
+"""Example test checking for DST certificates.
+
+This test requires the ``cryptography`` package. If it is not installed,
+pytest will skip this module automatically.
+"""
+
+
 """Example script for checking DST certificates.
 
 This file is treated as a test by pytest due to its name. It requires the
@@ -10,6 +19,9 @@ import pytest
 pytest.skip("cryptography not available for example test", allow_module_level=True)
 
 import _ssl
+import pytest
+
+cryptography = pytest.importorskip("cryptography")
 from cryptography import x509
 
 
@@ -32,14 +44,11 @@ def find_dst_cert(store_name) -> bool:
             return True
     return False
 
-print('Determining if you are potentially impacted by the expired DST certificate.')
+def test_find_dst_cert_no_results(monkeypatch):
+    """Ensure the helper handles empty certificate stores."""
 
-found: bool = find_dst_cert(store_name="CA")
-found = found or find_dst_cert(store_name="ROOT")
+    def fake_enum_certificates(_store):
+        return []
 
-if found:
-    print('The potentially problematic certificate exists in certificate store.')
-    print('Removal of the certificate from certificate store will not impact other operations.')
-    print('Browsers that need the certificate will put it in the cert stores again.')
-else:
-    print('The problematic certificate is not in the certificate stores.')
+    monkeypatch.setattr(_ssl, "enum_certificates", fake_enum_certificates)
+    assert find_dst_cert("CA") is False

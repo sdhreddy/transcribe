@@ -5,8 +5,8 @@ from . import constants
 from .db import (
     AppDB as appdb,
     conversation as convodb,
-    llm_responses as llmrdb)
-sys.path.append('../..')
+    llm_responses as llmrdb,
+)
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 
 

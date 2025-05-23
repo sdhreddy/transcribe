@@ -1,6 +1,12 @@
 import unittest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
+
+from app.transcribe.db.app_invocations import (
+    Invocation,
+    ApplicationInvocations,
+)
+
 # Import from the parent package to avoid relying on global package installation
 from ..app_invocations import Invocation, ApplicationInvocations
 
