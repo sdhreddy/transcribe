@@ -1,5 +1,9 @@
 
 # pip install cryptography
+
+import pytest
+pytest.skip("cryptography not installed", allow_module_level=True)
+
 """Example test checking for DST certificates.
 
 This test requires the ``cryptography`` package. If it is not installed,
@@ -17,6 +21,7 @@ Skipping the module ensures the rest of the test suite runs offline.
 import pytest
 
 pytest.skip("cryptography not available for example test", allow_module_level=True)
+
 
 import _ssl
 import pytest

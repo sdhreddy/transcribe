@@ -1,10 +1,19 @@
 import sys
 import time
 import atexit
+
+import app_utils as au
+from args import create_args, update_args_config, handle_args_batch_tasks
+from global_vars import T_GLOBALS
+from appui import AppUI
+from audio_player import AudioPlayer
+sys.path.append('../..')
+
 from . import app_utils as au
 from .args import create_args, update_args_config, handle_args_batch_tasks
 from .global_vars import T_GLOBALS
 from .appui import AppUI
+
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413
 from tsutils import utilities as u  # noqa: E402 pylint: disable=C0413
@@ -32,6 +41,8 @@ def main():
     global_vars.transcriber.set_source_properties(mic_source=global_vars.user_audio_recorder.source,
                                                   speaker_source=global_vars.speaker_audio_recorder.source)
 
+    global_vars.audio_player_var = AudioPlayer(convo=global_vars.convo)
+
     # Remove potential temp files from previous invocation
     data_dir = u.get_data_path(app_name='Transcribe')
     u.delete_files([
@@ -43,7 +54,9 @@ def main():
     # Convert raw audio files to real wav file format when program exits
     atexit.register(au.shutdown, global_vars)
 
-    user_stop_func = global_vars.user_audio_recorder.record_audio(global_vars.audio_queue)
+    user_stop_func = global_vars.user_audio_recorder.record_audio(
+        global_vars.audio_queue,
+        on_audio_callback=global_vars.audio_player_var.stop_playback)
     global_vars.user_audio_recorder.stop_record_func = user_stop_func
 
     time.sleep(2)

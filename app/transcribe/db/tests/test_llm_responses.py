@@ -46,9 +46,12 @@ class TestLLMResponses(unittest.TestCase):
             invocation_id=invocation_id,
             conversation_id=conversation_id,
 
+            text=insert_text
+
             text=insert_text,
 
             text=insert_text
+
 
         )
 
@@ -73,9 +76,13 @@ class TestLLMResponses(unittest.TestCase):
             invocation_id=invocation_id,
             conversation_id=conversation_id,
 
+            text=insert_text
+
+
             text=insert_text,
 
             text=insert_text
+
 
         )
 
@@ -87,9 +94,12 @@ class TestLLMResponses(unittest.TestCase):
             invocation_id=invocation_id,
             conversation_id=conversation_id,
 
+            text=insert_text
+
             text=insert_text,
 
             text=insert_text
+
 
         )
 

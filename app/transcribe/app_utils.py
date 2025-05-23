@@ -40,8 +40,13 @@ def initiate_app_threads(global_vars: TranscriptionGlobals,
                          config: dict):
     """Start all threads required for the application"""
     # Transcribe and Respond threads, both work on the same instance of the AudioTranscriber class
+
+    if global_vars.audio_player_var is None:
+        global_vars.audio_player_var = AudioPlayer(convo=global_vars.convo)
+
     global_vars.audio_player_var = AudioPlayer(convo=global_vars.convo,
                                                global_vars=global_vars)
+
     transcribe_thread = threading.Thread(target=global_vars.transcriber.transcribe_audio_queue,
                                          name='Transcribe',
                                          args=(global_vars.audio_queue,))

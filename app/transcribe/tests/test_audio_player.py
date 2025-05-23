@@ -9,9 +9,15 @@ from unittest.mock import patch, MagicMock
 import time
 import threading
 from gtts import gTTS
+
+import sys
+sys.modules['simpleaudio'] = MagicMock()
+import simpleaudio
+
 import playsound
 import sys
 from types import ModuleType
+
 # sys.path.append('app/transcribe')
 from app.transcribe.audio_player import AudioPlayer
 import app.transcribe.conversation as c
@@ -39,24 +45,26 @@ class TestAudioPlayer(unittest.TestCase):
             del sys.modules['global_vars']
 
     @patch('gtts.gTTS')
-    @patch('playsound.playsound')
-    def test_play_audio_exception(self, mock_playsound, mock_gtts):
+    @patch('subprocess.call')
+    @patch('simpleaudio.WaveObject.from_wave_file')
+    def test_play_audio_exception(self, mock_wave, mock_call, mock_gtts):
         """
         Test the play_audio method when an exception occurs.
 
-        Verifies that the method handles the playsound exception correctly and logs the error.
+        Verifies that the method handles the playback exception correctly and logs the error.
         """
         speech = "Hello, this is a test."
         lang = 'en'
         mock_gtts.return_value = MagicMock(spec=gTTS)
-        mock_playsound.side_effect = playsound.PlaysoundException
+        mock_wave.side_effect = Exception('fail')
+        mock_call.return_value = 0
 
         with self.assertLogs(level='ERROR') as log:
-            self.audio_player.play_audio(speech, lang)
+            self.audio_player._play_audio(speech, lang)
             self.assertIn('Error when attempting to play audio.', log.output[0])
 
-    @patch.object(AudioPlayer, 'play_audio')
-    def test_play_audio_loop(self, mock_play_audio):
+    @patch.object(AudioPlayer, 'start_playback')
+    def test_play_audio_loop(self, mock_start_playback):
         """
         Test the play_audio_loop method.
 
@@ -70,7 +78,7 @@ class TestAudioPlayer(unittest.TestCase):
             self.audio_player.read_response = False
             self.audio_player.speech_text_available.clear()
 
-        mock_play_audio.side_effect = side_effect
+        mock_start_playback.side_effect = side_effect
         self.audio_player.speech_text_available.set()
         self.audio_player.read_response = True
 
