@@ -3,10 +3,10 @@ import time
 from enum import Enum
 # import pprint
 import openai
-import prompts
-import conversation
-import constants
-from db import (
+from . import prompts
+from . import conversation
+from . import constants
+from .db import (
     AppDB as appdb,
     llm_responses as llmrdb,
     summaries as s)
@@ -31,6 +31,7 @@ class GPTResponder:
     enabled: bool = False
     model: str = None
     llm_client = None
+    stream_done: bool = True
 
     def __init__(self,
                  config: dict,
@@ -47,6 +48,7 @@ class GPTResponder:
         self.save_response_to_file = save_to_file
         self.response_file = file_name
         self.openai_module = openai_module
+        self.stream_done = True
 
     def summarize(self) -> str:
         """Ping LLM to get a summary of the conversation.
@@ -119,23 +121,28 @@ class GPTResponder:
     def _get_llm_response(self, messages, temperature, timeout) -> str:
         """Send a request to the LLM and process the streaming response."""
         with duration.Duration(name='OpenAI Chat Completion', screen=False):
-            multi_turn_response = self.llm_client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                timeout=timeout,
-                stream=True
-            )
+            self.stream_done = False
+            try:
+                multi_turn_response = self.llm_client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=temperature,
+                    timeout=timeout,
+                    stream=True
+                )
 
-            collected_messages = ""
-            for chunk in multi_turn_response:
-                chunk_message = chunk.choices[0].delta  # extract the message
-                if chunk_message.content:
-                    message_text = chunk_message.content
-                    collected_messages += message_text
-                    self._update_conversation(persona=constants.PERSONA_ASSISTANT,
-                                              response=collected_messages,
-                                              update_previous=True)
+                collected_messages = ""
+                for chunk in multi_turn_response:
+                    chunk_message = chunk.choices[0].delta  # extract the message
+                    if chunk_message.content:
+                        message_text = chunk_message.content
+                        collected_messages += message_text
+                        self._update_conversation(persona=constants.PERSONA_ASSISTANT,
+                                                  response=collected_messages,
+                                                  update_previous=True)
+            finally:
+                self.stream_done = True
+
             return collected_messages
 
     def _insert_response_in_db(self, last_convo_id: int, response: str):

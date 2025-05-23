@@ -1,3 +1,5 @@
+# This widget requires a display. Skip the tests if running headless.
+import os
 import unittest
 from tkinter import Tk
 # from customtkinter import CTk
@@ -6,6 +8,7 @@ from tkinter import Tk
 from app.transcribe.uicomp.selectable_text import SelectableText
 
 
+@unittest.skipIf(os.environ.get('DISPLAY', '') == '', 'requires display')
 class TestSelectableText(unittest.TestCase):
     def setUp(self):
         # Set up a root window and the component for testing
