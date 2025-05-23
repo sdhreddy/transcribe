@@ -81,6 +81,7 @@ General:
   disable_speaker: False
   stt: whisper
   continuous_response: True
+  # Automatically read all AI responses aloud when enabled
   continuous_read: Yes
   # The interval at which to ping the LLM for response
   llm_response_interval: 10
