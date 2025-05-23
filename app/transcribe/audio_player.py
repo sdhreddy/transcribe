@@ -28,7 +28,12 @@ class AudioPlayer:
         self.temp_dir = tempfile.gettempdir()
         self.read_response = False
         self.stop_loop = False
+
         self.global_vars = global_vars
+
+        # Flag to indicate when audio is being played back
+        self.is_playing = False
+
 
     def play_audio(self, speech: str, lang: str):
         """Play text as audio.
@@ -36,6 +41,15 @@ class AudioPlayer:
         For large audio text, this could take several minutes.
         """
         logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        # Import here to avoid circular dependency during initialization
+        from global_vars import T_GLOBALS as global_vars
+
+        self.is_playing = True
+        speaker_recorder = getattr(global_vars, 'speaker_audio_recorder', None)
+        prev_enabled = None
+        if speaker_recorder is not None:
+            prev_enabled = speaker_recorder.enabled
+            speaker_recorder.enabled = False
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
@@ -47,6 +61,9 @@ class AudioPlayer:
             logger.error('Error when attempting to play audio.', exc_info=True)
             logger.info(play_ex)
         finally:
+            if speaker_recorder is not None and prev_enabled is not None:
+                speaker_recorder.enabled = prev_enabled
+            self.is_playing = False
             os.remove(temp_audio_file[1])
 
     def play_audio_loop(self, config: dict):
