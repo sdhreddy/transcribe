@@ -6,6 +6,8 @@ Use the **Read Responses Continuously** switch to automatically hear every AI re
 
 Continuous Read Aloud helps users with accessibility needs or for hands‑free use.
 
+While audio is being spoken, speaker input capture is temporarily muted to avoid echo. If you speak while a response is playing, playback stops immediately so your words are transcribed.
+
 If audio playback fails, ensure your speakers are enabled and `ffplay` from FFmpeg is installed and on your PATH.
 
 ![Screenshot](../assets/ReadResponses.png)

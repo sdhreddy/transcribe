@@ -96,16 +96,14 @@ class AudioPlayer:
                 self.read_response = False
                 # Disable audio capture to avoid echo
                 sp_rec = self.conversation.context.speaker_audio_recorder
-                mic_rec = self.conversation.context.user_audio_recorder
+                # Only disable speaker capture so user mic remains active and
+                # playback can be interrupted by new speech.
                 prev_sp_state = sp_rec.enabled
-                prev_mic_state = mic_rec.enabled
                 sp_rec.enabled = False
-                mic_rec.enabled = False
                 try:
                     self.play_audio(speech=final_speech, lang=lang_code)
                 finally:
                     sp_rec.enabled = prev_sp_state
-                    mic_rec.enabled = prev_mic_state
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
