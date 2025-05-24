@@ -1,6 +1,7 @@
 import datetime
 import time
 from enum import Enum
+import threading
 # import pprint
 import openai
 import prompts
@@ -47,6 +48,7 @@ class GPTResponder:
         self.save_response_to_file = save_to_file
         self.response_file = file_name
         self.openai_module = openai_module
+        self.streaming_complete = threading.Event()
 
     def summarize(self) -> str:
         """Ping LLM to get a summary of the conversation.
@@ -118,6 +120,7 @@ class GPTResponder:
 
     def _get_llm_response(self, messages, temperature, timeout) -> str:
         """Send a request to the LLM and process the streaming response."""
+        self.streaming_complete.clear()
         with duration.Duration(name='OpenAI Chat Completion', screen=False):
             multi_turn_response = self.llm_client.chat.completions.create(
                 model=self.model,
@@ -136,6 +139,7 @@ class GPTResponder:
                     self._update_conversation(persona=constants.PERSONA_ASSISTANT,
                                               response=collected_messages,
                                               update_previous=True)
+            self.streaming_complete.set()
             return collected_messages
 
     def _insert_response_in_db(self, last_convo_id: int, response: str):
@@ -269,6 +273,7 @@ class GPTResponder:
                 return None
 
             with duration.Duration(name='OpenAI Chat Completion Selected', screen=False):
+                self.streaming_complete.clear()
                 prompt = prompts.create_prompt_for_text(text=text, config=self.config)
                 llm_response = self.llm_client.chat.completions.create(
                     model=self.model,
@@ -293,6 +298,7 @@ class GPTResponder:
                         self._update_conversation(persona=constants.PERSONA_ASSISTANT,
                                                   response=collected_messages,
                                                   update_previous=True)
+                self.streaming_complete.set()
 
         except Exception as exception:
             print('Error when attempting to get a response from LLM.')

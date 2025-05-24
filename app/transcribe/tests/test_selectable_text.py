@@ -1,11 +1,13 @@
 import unittest
 from tkinter import Tk
+import os
 # from customtkinter import CTk
 
 # Assuming SelectableTextComponent is defined in a module named selectable_text_component
 from app.transcribe.uicomp.selectable_text import SelectableText
 
 
+@unittest.skipIf('DISPLAY' not in os.environ, 'requires display')
 class TestSelectableText(unittest.TestCase):
     def setUp(self):
         # Set up a root window and the component for testing

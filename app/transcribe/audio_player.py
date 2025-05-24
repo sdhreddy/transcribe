@@ -7,6 +7,7 @@ import os
 import time
 import tempfile
 import threading
+import subprocess
 import playsound
 import gtts
 from conversation import Conversation
@@ -28,6 +29,21 @@ class AudioPlayer:
         self.temp_dir = tempfile.gettempdir()
         self.read_response = False
         self.stop_loop = False
+        self.current_process = None
+        self.play_lock = threading.Lock()
+
+    def stop_current_playback(self):
+        """Stop any current audio playback"""
+        if self.current_process and self.current_process.poll() is None:
+            try:
+                self.current_process.terminate()
+                self.current_process.wait(timeout=1)
+            except Exception:
+                try:
+                    self.current_process.kill()
+                except Exception:
+                    pass
+        self.current_process = None
 
     def play_audio(self, speech: str, lang: str):
         """Play text as audio.
@@ -41,12 +57,24 @@ class AudioPlayer:
             os.close(temp_audio_file[0])
 
             audio_obj.save(temp_audio_file[1])
-            playsound.playsound(temp_audio_file[1])
-        except playsound.PlaysoundException as play_ex:
+            with self.play_lock:
+                self.stop_current_playback()
+                self.current_process = subprocess.Popen(
+                    ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet', temp_audio_file[1]],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+            while self.current_process.poll() is None:
+                if not self.conversation.context.audio_queue.empty():
+                    self.stop_current_playback()
+                    break
+                time.sleep(0.1)
+        except Exception as play_ex:
             logger.error('Error when attempting to play audio.', exc_info=True)
             logger.info(play_ex)
         finally:
             os.remove(temp_audio_file[1])
+            with self.play_lock:
+                self.stop_current_playback()
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
@@ -66,7 +94,18 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
-                self.play_audio(speech=final_speech, lang=lang_code)
+                # Disable audio capture to avoid echo
+                sp_rec = self.conversation.context.speaker_audio_recorder
+                mic_rec = self.conversation.context.user_audio_recorder
+                prev_sp_state = sp_rec.enabled
+                prev_mic_state = mic_rec.enabled
+                sp_rec.enabled = False
+                mic_rec.enabled = False
+                try:
+                    self.play_audio(speech=final_speech, lang=lang_code)
+                finally:
+                    sp_rec.enabled = prev_sp_state
+                    mic_rec.enabled = prev_mic_state
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
