@@ -9,8 +9,10 @@ from unittest.mock import patch, MagicMock
 import time
 import threading
 from gtts import gTTS
-import playsound
-# sys.path.append('app/transcribe')
+import subprocess
+import sys
+import os
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 from app.transcribe.audio_player import AudioPlayer
 import app.transcribe.conversation as c
 import app.transcribe.constants as const
@@ -22,12 +24,13 @@ class TestAudioPlayer(unittest.TestCase):
     def setUp(self):
         """Set up the test environment."""
         self.convo = MagicMock(spec=c.Conversation)
+        self.convo.context = MagicMock()
         self.audio_player = AudioPlayer(convo=self.convo)
         self.config = {'OpenAI': {'response_lang': 'english'}, 'english': 'en'}
 
     @patch('gtts.gTTS')
-    @patch('playsound.playsound')
-    def test_play_audio_exception(self, mock_playsound, mock_gtts):
+    @patch('subprocess.Popen')
+    def test_play_audio_exception(self, mock_popen, mock_gtts):
         """
         Test the play_audio method when an exception occurs.
 
@@ -36,7 +39,7 @@ class TestAudioPlayer(unittest.TestCase):
         speech = "Hello, this is a test."
         lang = 'en'
         mock_gtts.return_value = MagicMock(spec=gTTS)
-        mock_playsound.side_effect = playsound.PlaysoundException
+        mock_popen.side_effect = Exception('ffplay missing')
 
         with self.assertLogs(level='ERROR') as log:
             self.audio_player.play_audio(speech, lang)

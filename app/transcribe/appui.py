@@ -147,11 +147,16 @@ class AppUI(ctk.CTk):
         self.word_cloud_button.grid(row=4, column=4, padx=10, pady=3, sticky="nsew")
         self.word_cloud_button.configure(command=self.word_cloud)
 
-        # Continuous read aloud button
+        # Continuous read aloud switch
         read_enabled = bool(config['General'].get('continuous_read', False))
-        b_read_text = "Read Responses Continuously" if not read_enabled else "Do Not Read Responses Continuously"
-        self.continuous_read_button = ctk.CTkButton(self.bottom_frame, text=b_read_text)
+        self.continuous_read_button = ctk.CTkSwitch(self.bottom_frame, text="Read Responses Continuously")
         self.continuous_read_button.grid(row=5, column=4, padx=10, pady=3, sticky="nsew")
+        if read_enabled:
+            self.continuous_read_button.select()
+        ToolTip(self.continuous_read_button,
+                msg='When enabled, all AI responses will be spoken aloud automatically.',
+                delay=0.01, follow=True, parent_kwargs={"padx": 3, "pady": 3},
+                padx=7, pady=7)
         self.continuous_read_button.configure(command=self.toggle_continuous_read)
 
         # Continuous LLM Response label, and slider
@@ -417,12 +422,12 @@ class AppUI(ctk.CTk):
         """Toggle automatic reading of responses"""
         logger.info(AppUI.toggle_continuous_read.__name__)
         try:
-            new_state = not self.global_vars.continuous_read
+            new_state = bool(self.continuous_read_button.get())
             self.global_vars.set_continuous_read(new_state)
+            config_obj = configuration.Config()
+            altered_config = {'General': {'continuous_read': bool(new_state)}}
+            config_obj.add_override_value(altered_config)
             self.capture_action(f'{"Enabled " if new_state else "Disabled "} continuous read aloud')
-            self.continuous_read_button.configure(
-                text="Read Responses Continuously" if not new_state else "Do Not Read Responses Continuously"
-            )
         except Exception as e:
             logger.error(f"Error toggling continuous read state: {e}")
 
@@ -500,6 +505,7 @@ class AppUI(ctk.CTk):
             # Set event to play the recording audio if required
             if self.global_vars.read_response:
                 self.global_vars.audio_player_var.speech_text_available.set()
+                self.global_vars.last_tts_response = response_string
             self.response_textbox.configure(state="normal")
             if response_string:
                 write_in_textbox(self.response_textbox, response_string)
@@ -858,10 +864,13 @@ def update_response_ui(responder: gr.GPTResponder,
         write_in_textbox(textbox, response)
         textbox.configure(state="disabled")
         textbox.see("end")
-        if global_vars_module.continuous_read and response != global_vars_module.last_tts_response:
+        if (global_vars_module.continuous_read and
+                responder.streaming_complete.is_set() and
+                response != global_vars_module.last_tts_response):
             global_vars_module.last_tts_response = response
             global_vars_module.set_read_response(True)
             global_vars_module.audio_player_var.speech_text_available.set()
+            responder.streaming_complete.clear()
 
     update_interval = int(update_interval_slider.get())
     responder.update_response_interval(update_interval)

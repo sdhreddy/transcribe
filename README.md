@@ -79,7 +79,7 @@ Connect on LinkedIn to discuss further.
 - [Audio Customization](./docs/AudioCustomization.md)
 - [Response for selected text](./docs/SelectedResponse.md)
 - [Speech Mode](./docs/SpeechMode.md)
-- **New:** Toggle [Continuous Read Aloud](./docs/SpeechMode.md#speech-mode) from the UI
+- **New:** Toggle [Continuous Read Aloud](./docs/SpeechMode.md#speech-mode) from the UI using the switch in the bottom panel. The preference is saved automatically.
 - [Save Content](./docs/SaveContent.md)
 - [Model Selection](./docs/ModelSelection.md)
 - [Batch Operations](./docs/BatchOperations.md)
