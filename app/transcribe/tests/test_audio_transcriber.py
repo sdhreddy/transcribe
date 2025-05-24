@@ -45,6 +45,12 @@ class TestAudioTranscriber(unittest.TestCase):
         gv.last_playback_end = datetime.datetime.utcnow()
         self.assertTrue(self.transcriber._should_ignore_speaker_transcript('hello world'))
 
+    def test_ignore_partial_match(self):
+        gv = self.transcriber.conversation.context
+        gv.last_tts_response = 'hello world'
+        gv.last_playback_end = datetime.datetime.utcnow()
+        self.assertTrue(self.transcriber._should_ignore_speaker_transcript('world'))
+
     def test_not_ignore_when_old(self):
         gv = self.transcriber.conversation.context
         gv.last_tts_response = 'hello world'

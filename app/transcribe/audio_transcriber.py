@@ -13,6 +13,7 @@ from abc import abstractmethod
 import wave
 import tempfile
 import pyaudiowpatch as pyaudio
+from difflib import SequenceMatcher
 # from db import AppDB as appdb
 import conversation  # noqa: E402 pylint: disable=C0413
 import constants  # noqa: E402 pylint: disable=C0413
@@ -183,7 +184,11 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
         if delta > constants.PLAYBACK_IGNORE_WINDOW_SECONDS:
             return False
         last_tts = gv.last_tts_response.strip().lower()
-        return text.strip().lower() == last_tts
+        candidate = text.strip().lower()
+        if candidate == last_tts or candidate in last_tts or last_tts in candidate:
+            return True
+        ratio = SequenceMatcher(None, candidate, last_tts).ratio()
+        return ratio >= constants.IGNORE_SIMILARITY_THRESHOLD
 
     @abstractmethod
     def check_for_latency(self, results: dict) -> tuple[bool, int, float]:
