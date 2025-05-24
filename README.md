@@ -80,6 +80,7 @@ Connect on LinkedIn to discuss further.
 - [Response for selected text](./docs/SelectedResponse.md)
 - [Speech Mode](./docs/SpeechMode.md)
 - **New:** Toggle [Continuous Read Aloud](./docs/SpeechMode.md#speech-mode) from the UI using the switch in the bottom panel. Playback temporarily mutes speaker capture and stops if you start speaking. The preference is saved automatically.
+- Automatic echo suppression prevents the AI from responding to its own speech.
 - [Save Content](./docs/SaveContent.md)
 - [Model Selection](./docs/ModelSelection.md)
 - [Batch Operations](./docs/BatchOperations.md)

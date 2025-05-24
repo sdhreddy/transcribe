@@ -8,6 +8,7 @@ import time
 import tempfile
 import threading
 import subprocess
+import datetime
 import playsound
 import gtts
 from conversation import Conversation
@@ -103,7 +104,9 @@ class AudioPlayer:
                 try:
                     self.play_audio(speech=final_speech, lang=lang_code)
                 finally:
+                    time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
+                    self.conversation.context.last_playback_end = datetime.datetime.utcnow()
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
