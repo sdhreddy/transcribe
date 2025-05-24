@@ -28,6 +28,10 @@ class TranscriptionGlobals(Singleton.Singleton):
     update_response_now: bool = False
     # Read response in voice
     read_response: bool = False
+    # Read every AI response aloud when enabled
+    continuous_read: bool = False
+    # Last response that was read aloud
+    last_tts_response: str = ""
     # LLM Response to an earlier conversation
     # This is populated when user clicks on text in transcript textbox
     previous_response: str = None
@@ -73,6 +77,8 @@ class TranscriptionGlobals(Singleton.Singleton):
         self.db_context['db_file_path'] = self.db_file_path
         self.db_context['current_working_dir'] = self.current_working_dir
         self.db_context['db_log_file'] = db_log_file
+        self.continuous_read = False
+        self.last_tts_response = ""
         self._initialized = True
 
     def set_transcriber(self, transcriber):
@@ -104,6 +110,10 @@ class TranscriptionGlobals(Singleton.Singleton):
         """
         self.read_response = value
         self.audio_player_var.read_response = value
+
+    def set_continuous_read(self, value: bool):
+        """Toggle continuous read aloud of responses"""
+        self.continuous_read = value
 
 
 # Instantiate a single copy of globals here itself
