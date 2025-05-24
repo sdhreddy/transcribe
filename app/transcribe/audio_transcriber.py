@@ -144,8 +144,9 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                 os.unlink(path)
 
             if text != '' and text.lower() != 'you':
-                self.update_transcript(who_spoke, text, time_spoken)
-                self.transcript_changed_event.set()
+                if not (who_spoke == 'Speaker' and self._should_ignore_speaker_transcript(text)):
+                    self.update_transcript(who_spoke, text, time_spoken)
+                    self.transcript_changed_event.set()
 
     def _prune_audio_file(self, results, who_spoke, time_spoken, path):
         """Checks if pruning of Audio Source is required based on transcriber
@@ -172,6 +173,17 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                                                   time_spoken=time_spoken,
                                                   text=second,
                                                   update_previous=False)
+
+    def _should_ignore_speaker_transcript(self, text: str) -> bool:
+        """Determine if speaker transcript matches recent TTS output."""
+        gv = self.conversation.context
+        if gv.last_playback_end is None:
+            return False
+        delta = (datetime.datetime.utcnow() - gv.last_playback_end).total_seconds()
+        if delta > constants.PLAYBACK_IGNORE_WINDOW_SECONDS:
+            return False
+        last_tts = gv.last_tts_response.strip().lower()
+        return text.strip().lower() == last_tts
 
     @abstractmethod
     def check_for_latency(self, results: dict) -> tuple[bool, int, float]:

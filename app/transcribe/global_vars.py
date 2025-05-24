@@ -32,6 +32,8 @@ class TranscriptionGlobals(Singleton.Singleton):
     continuous_read: bool = False
     # Last response that was read aloud
     last_tts_response: str = ""
+    # Timestamp when the last TTS playback finished
+    last_playback_end: datetime.datetime = None
     # LLM Response to an earlier conversation
     # This is populated when user clicks on text in transcript textbox
     previous_response: str = None
@@ -79,6 +81,7 @@ class TranscriptionGlobals(Singleton.Singleton):
         self.db_context['db_log_file'] = db_log_file
         self.continuous_read = False
         self.last_tts_response = ""
+        self.last_playback_end = None
         self._initialized = True
 
     def set_transcriber(self, transcriber):
