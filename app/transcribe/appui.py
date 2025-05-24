@@ -147,6 +147,13 @@ class AppUI(ctk.CTk):
         self.word_cloud_button.grid(row=4, column=4, padx=10, pady=3, sticky="nsew")
         self.word_cloud_button.configure(command=self.word_cloud)
 
+        # Continuous read aloud button
+        read_enabled = bool(config['General'].get('continuous_read', False))
+        b_read_text = "Read Responses Continuously" if not read_enabled else "Do Not Read Responses Continuously"
+        self.continuous_read_button = ctk.CTkButton(self.bottom_frame, text=b_read_text)
+        self.continuous_read_button.grid(row=5, column=4, padx=10, pady=3, sticky="nsew")
+        self.continuous_read_button.configure(command=self.toggle_continuous_read)
+
         # Continuous LLM Response label, and slider
         self.update_interval_slider_label = ctk.CTkLabel(self.bottom_frame, text="", font=("Arial", 12),
                                                          text_color="#FFFCF2")
@@ -406,6 +413,21 @@ class AppUI(ctk.CTk):
         except Exception as e:
             logger.error(f"Error toggling responder state: {e}")
 
+    def toggle_continuous_read(self):
+        """Toggle automatic reading of responses"""
+        logger.info(AppUI.toggle_continuous_read.__name__)
+        try:
+            new_state = not self.global_vars.continuous_read
+            self.global_vars.set_continuous_read(new_state)
+            config_obj = configuration.Config()
+            config_obj.add_override_value({'General': {'continuous_read': new_state}})
+            self.capture_action(f'{"Enabled " if new_state else "Disabled "} continuous read aloud')
+            self.continuous_read_button.configure(
+                text="Read Responses Continuously" if not new_state else "Do Not Read Responses Continuously"
+            )
+        except Exception as e:
+            logger.error(f"Error toggling continuous read state: {e}")
+
     def enable_disable_speaker(self):
         """Toggles the state of speaker
         """
@@ -449,6 +471,8 @@ class AppUI(ctk.CTk):
         if self.global_vars.update_response_now:
             # We are already in the middle of getting a response
             return
+        if self.global_vars.continuous_read:
+            self.global_vars.set_read_response(True)
         # We need a separate thread to ensure UI is responsive as responses are
         # streamed back. Without the thread UI appears stuck as we stream the
         # responses back
@@ -493,6 +517,8 @@ class AppUI(ctk.CTk):
         if self.global_vars.update_response_now:
             # We are already in the middle of getting a response
             return
+        if self.global_vars.continuous_read:
+            self.global_vars.set_read_response(True)
         # We need a separate thread to ensure UI is responsive as responses are
         # streamed back. Without the thread UI appears stuck as we stream the
         # responses back
@@ -834,6 +860,10 @@ def update_response_ui(responder: gr.GPTResponder,
         write_in_textbox(textbox, response)
         textbox.configure(state="disabled")
         textbox.see("end")
+        if global_vars_module.continuous_read and response != global_vars_module.last_tts_response:
+            global_vars_module.last_tts_response = response
+            global_vars_module.set_read_response(True)
+            global_vars_module.audio_player_var.speech_text_available.set()
 
     update_interval = int(update_interval_slider.get())
     responder.update_response_interval(update_interval)

@@ -259,10 +259,9 @@ class GPTResponder:
         """
         try:
             logger.info(GPTResponder.generate_response_for_selected_text.__name__)
-            chat_inference_provider = self.config['General']['chat_inference_provider']
-
-            chat_inference_provider = self.config['General']['chat_inference_provider']
-            settings_section = self._get_settings_section(chat_inference_provider)
+            settings_section = self._get_settings_section(
+                self.config['General']['chat_inference_provider']
+            )
             api_key, base_url, model = self._get_api_settings(settings_section)
 
             timeout, temperature = self._get_openai_settings()

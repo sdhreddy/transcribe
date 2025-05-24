@@ -26,8 +26,8 @@ class TestAudioPlayer(unittest.TestCase):
         self.config = {'OpenAI': {'response_lang': 'english'}, 'english': 'en'}
 
     @patch('gtts.gTTS')
-    @patch('playsound.playsound')
-    def test_play_audio_exception(self, mock_playsound, mock_gtts):
+    @patch('subprocess.Popen')
+    def test_play_audio_exception(self, mock_popen, mock_gtts):
         """
         Test the play_audio method when an exception occurs.
 
@@ -36,7 +36,9 @@ class TestAudioPlayer(unittest.TestCase):
         speech = "Hello, this is a test."
         lang = 'en'
         mock_gtts.return_value = MagicMock(spec=gTTS)
-        mock_playsound.side_effect = playsound.PlaysoundException
+        process_mock = MagicMock()
+        process_mock.wait.side_effect = playsound.PlaysoundException
+        mock_popen.return_value = process_mock
 
         with self.assertLogs(level='ERROR') as log:
             self.audio_player.play_audio(speech, lang)
