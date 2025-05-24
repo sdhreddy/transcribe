@@ -3,13 +3,12 @@
 import sys
 import subprocess  # nosec
 import threading
-from global_vars import TranscriptionGlobals
-from audio_player import AudioPlayer  # noqa: E402 pylint: disable=C0413
-from gpt_responder import InferenceResponderFactory, InferenceEnum
-from audio_transcriber import WhisperCPPTranscriber, WhisperTranscriber, DeepgramTranscriber
-from db.app_db import AppDB
-sys.path.append('../..')
-import interactions  # noqa: E402 pylint: disable=C0413
+from .global_vars import TranscriptionGlobals
+from .audio_player import AudioPlayer  # noqa: E402 pylint: disable=C0413
+from .gpt_responder import InferenceResponderFactory, InferenceEnum
+from .audio_transcriber import WhisperCPPTranscriber, WhisperTranscriber, DeepgramTranscriber
+from .db.app_db import AppDB
+from . import interactions  # noqa: E402 pylint: disable=C0413
 from sdk import transcriber_models as tm  # noqa: E402 pylint: disable=C0413
 from tsutils import utilities, language
 
@@ -41,7 +40,13 @@ def initiate_app_threads(global_vars: TranscriptionGlobals,
                          config: dict):
     """Start all threads required for the application"""
     # Transcribe and Respond threads, both work on the same instance of the AudioTranscriber class
-    global_vars.audio_player_var = AudioPlayer(convo=global_vars.convo)
+
+    if global_vars.audio_player_var is None:
+        global_vars.audio_player_var = AudioPlayer(convo=global_vars.convo)
+
+    global_vars.audio_player_var = AudioPlayer(convo=global_vars.convo,
+                                               global_vars=global_vars)
+
     transcribe_thread = threading.Thread(target=global_vars.transcriber.transcribe_audio_queue,
                                          name='Transcribe',
                                          args=(global_vars.audio_queue,))

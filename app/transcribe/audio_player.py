@@ -7,10 +7,21 @@ import os
 import time
 import tempfile
 import threading
+
+import subprocess  # nosec
 import playsound
+
+
 import gtts
+
+import simpleaudio
+import subprocess
 from conversation import Conversation
 import constants
+
+from .conversation import Conversation
+from . import constants
+
 from tsutils import app_logging as al
 from tsutils.language import LANGUAGES_DICT
 
@@ -21,13 +32,32 @@ class AudioPlayer:
     """Play text to audio.
     """
 
-    def __init__(self, convo: Conversation):
+    def __init__(self, convo: Conversation, global_vars=None):
         logger.info(self.__class__.__name__)
         self.speech_text_available = threading.Event()
         self.conversation = convo
         self.temp_dir = tempfile.gettempdir()
         self.read_response = False
         self.stop_loop = False
+        self.is_playing = False        self._playback_process = None
+
+        self._play_obj = None
+        self.play_thread = None
+
+
+    def _play_audio(self, speech: str, lang: str):
+        """Internal method to play text as audio."""
+        logger.info(f'{self.__class__.__name__} - Playing audio')
+        mp3_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
+        wav_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.wav')
+        os.close(mp3_file[0])
+        os.close(wav_file[0])
+
+        self.global_vars = global_vars
+
+        # Flag to indicate when audio is being played back
+        self.is_playing = False
+
 
     def play_audio(self, speech: str, lang: str):
         """Play text as audio.
@@ -35,18 +65,92 @@ class AudioPlayer:
         For large audio text, this could take several minutes.
         """
         logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        # Import here to avoid circular dependency during initialization
+        from global_vars import T_GLOBALS as global_vars
+
+        self.is_playing = True
+        speaker_recorder = getattr(global_vars, 'speaker_audio_recorder', None)
+        prev_enabled = None
+        if speaker_recorder is not None:
+            prev_enabled = speaker_recorder.enabled
+            speaker_recorder.enabled = False
+
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
+
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
             os.close(temp_audio_file[0])
 
             audio_obj.save(temp_audio_file[1])
-            playsound.playsound(temp_audio_file[1])
+
+            self.is_playing = True
+            self._playback_process = subprocess.Popen(
+                ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet', temp_audio_file[1]],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                text=False
+            )
+            self._playback_process.wait()
         except playsound.PlaysoundException as play_ex:
             logger.error('Error when attempting to play audio.', exc_info=True)
             logger.info(play_ex)
         finally:
+            self.is_playing = False
+            self._playback_process = None
             os.remove(temp_audio_file[1])
+
+    def stop_playback(self):
+        """Stop any active audio playback."""
+        if self._playback_process and self._playback_process.poll() is None:
+            try:
+                self._playback_process.kill()
+            except Exception:
+                logger.error('Failed to stop audio playback', exc_info=True)
+        self.is_playing = False
+        self._playback_process = None
+
+            audio_obj.save(mp3_file[1])
+            subprocess.call([
+                'ffmpeg', '-y', '-i', mp3_file[1], wav_file[1]
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            wave_obj = simpleaudio.WaveObject.from_wave_file(wav_file[1])
+            self.is_playing = True
+            self._play_obj = wave_obj.play()
+            self._play_obj.wait_done()
+        except Exception as play_ex:  # pylint: disable=broad-except
+            logger.error('Error when attempting to play audio.', exc_info=True)
+            logger.info(play_ex)
+        finally:
+
+            self.is_playing = False
+            self._play_obj = None
+            try:
+                os.remove(mp3_file[1])
+                os.remove(wav_file[1])
+            except OSError:
+                pass
+
+    def start_playback(self, speech: str, lang: str):
+        """Start audio playback asynchronously."""
+        self.play_thread = threading.Thread(target=self._play_audio, args=(speech, lang))
+        self.play_thread.start()
+
+    def stop_playback(self):
+        """Stop current playback if any."""
+        if self._play_obj is not None:
+            try:
+                self._play_obj.stop()
+            except Exception:  # pylint: disable=broad-except
+                pass
+        self.is_playing = False
+        self.read_response = False
+
+            if speaker_recorder is not None and prev_enabled is not None:
+                speaker_recorder.enabled = prev_enabled
+            self.is_playing = False
+            os.remove(temp_audio_file[1])
+
+
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
@@ -66,7 +170,22 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
+
                 self.play_audio(speech=final_speech, lang=lang_code)
+
+
+                self.play_audio(speech=final_speech, lang=lang_code)
+
+
+                self.start_playback(speech=final_speech, lang=lang_code)
+                while self.is_playing and self.stop_loop is False:
+                    time.sleep(0.1)
+
+                if self.global_vars is not None:
+                    self.global_vars.last_tts_response = speech
+                self.play_audio(speech=final_speech, lang=lang_code)
+
+
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:

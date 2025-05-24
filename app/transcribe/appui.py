@@ -419,6 +419,15 @@ class AppUI(ctk.CTk):
         try:
             new_state = not self.global_vars.continuous_read
             self.global_vars.set_continuous_read(new_state)
+
+            config_obj = configuration.Config()
+
+            config_obj.add_override_value({'General': {'continuous_read': new_state}})
+
+            altered_config = {'General': {'continuous_read': new_state}}
+            config_obj.add_override_value(altered_config)
+
+
             self.capture_action(f'{"Enabled " if new_state else "Disabled "} continuous read aloud')
             self.continuous_read_button.configure(
                 text="Read Responses Continuously" if not new_state else "Do Not Read Responses Continuously"
@@ -860,6 +869,17 @@ def update_response_ui(responder: gr.GPTResponder,
         textbox.see("end")
         if global_vars_module.continuous_read and response != global_vars_module.last_tts_response:
             global_vars_module.last_tts_response = response
+            global_vars_module.set_read_response(True)
+            global_vars_module.audio_player_var.speech_text_available.set()
+
+        if global_vars_module.continuous_read and response != global_vars_module.last_tts_response:
+            global_vars_module.last_tts_response = response
+
+        if (global_vars_module.continuous_read
+                and responder.stream_done
+                and response != global_vars_module.last_tts_response
+                and not global_vars_module.read_response):
+
             global_vars_module.set_read_response(True)
             global_vars_module.audio_player_var.speech_text_available.set()
 
