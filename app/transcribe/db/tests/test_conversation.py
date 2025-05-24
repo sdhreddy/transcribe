@@ -2,7 +2,18 @@ import unittest
 from datetime import datetime
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
+# Import from the db package
 from db.conversation import Conversation, Conversations
+
+
+from app.transcribe.db.conversation import (
+    Conversation,
+    Conversations,
+)
+
+# Import from the parent package to avoid relying on a top-level 'db' package
+from ..conversation import Conversation, Conversations
+
 
 
 class TestConversations(unittest.TestCase):

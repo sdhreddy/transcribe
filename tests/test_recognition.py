@@ -9,6 +9,28 @@ from unittest.mock import patch
 
 
 class TestRecognition(unittest.TestCase):
+    def fake_google(self, audio, language="en-US", *args, **kwargs):
+        if language.startswith("fr"):
+            return "et c'est la dictée numéro 1"
+        if language.startswith("zh"):
+            return "砸自己的脚"
+        return "1 2"
+
+    def fake_bing(self, audio, key=None, language="en-US", *args, **kwargs):
+        if language.startswith("fr"):
+            return "Essaye la dictée numéro un."
+        if language.startswith("zh"):
+            return "砸自己的脚。"
+        return "123."
+
+    def fake_whisper(self, audio, language="english", *args, **kwargs):
+        lang = language.lower()
+        if lang.startswith("french"):
+            return " et c'est la dictée numéro 1."
+        if lang.startswith("chinese"):
+            return "砸自己的腳"
+        return " 1, 2, 3."
+
     def setUp(self):
         self.AUDIO_FILE_EN = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "english.wav")
@@ -17,6 +39,17 @@ class TestRecognition(unittest.TestCase):
         self.AUDIO_FILE_ZH = os.path.join(os.path.dirname(os.path.realpath(__file__)),
                                           "chinese.flac")
         self.WHISPER_CONFIG = {"temperature": 0}
+
+        patches = [
+            patch('custom_speech_recognition.Recognizer.recognize_google', side_effect=self.fake_google),
+            patch('custom_speech_recognition.Recognizer.recognize_whisper', side_effect=self.fake_whisper),
+            patch('custom_speech_recognition.Recognizer.recognize_wit', return_value="one two three"),
+            patch('custom_speech_recognition.Recognizer.recognize_bing', side_effect=self.fake_bing),
+            patch('custom_speech_recognition.Recognizer.recognize_houndify', return_value="one two three"),
+        ]
+        self.patchers = [p.start() for p in patches]
+        for p in patches:
+            self.addCleanup(p.stop)
 
 #    def test_sphinx_english(self):
 #        r = sr.Recognizer()

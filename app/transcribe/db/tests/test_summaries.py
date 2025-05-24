@@ -1,7 +1,16 @@
 import unittest
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from summaries import Summary, Summaries  # Replace 'your_module' with the actual module name
+
+# Import from the db package
+from db.summaries import Summary, Summaries
+
+
+from app.transcribe.db.summaries import Summary, Summaries
+
+# Import from the parent package to avoid dependency on installation
+from ..summaries import Summary, Summaries
+
 
 
 class TestSummaries(unittest.TestCase):
