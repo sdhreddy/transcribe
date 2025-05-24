@@ -32,6 +32,7 @@ class AudioPlayer:
         self.stop_loop = False
         self.current_process = None
         self.play_lock = threading.Lock()
+        self.speech_rate = constants.DEFAULT_TTS_SPEECH_RATE
 
     def stop_current_playback(self):
         """Stop any current audio playback"""
@@ -46,7 +47,7 @@ class AudioPlayer:
                     pass
         self.current_process = None
 
-    def play_audio(self, speech: str, lang: str):
+    def play_audio(self, speech: str, lang: str, rate: float | None = None):
         """Play text as audio.
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
@@ -60,9 +61,12 @@ class AudioPlayer:
             audio_obj.save(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
+                cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
+                if rate and rate != 1.0:
+                    cmd += ['-af', f'atempo={rate}']
+                cmd.append(temp_audio_file[1])
                 self.current_process = subprocess.Popen(
-                    ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet', temp_audio_file[1]],
-                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
             while self.current_process.poll() is None:
                 if not self.conversation.context.audio_queue.empty():
@@ -82,6 +86,8 @@ class AudioPlayer:
         """
         lang = 'english'
         lang_code = self._get_language_code(lang)
+        rate = config.get('General', {}).get('tts_speech_rate', self.speech_rate)
+        self.speech_rate = rate
 
         while self.stop_loop is False:
             if self.speech_text_available.is_set() and self.read_response:
@@ -102,11 +108,13 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
-                    self.play_audio(speech=final_speech, lang=lang_code)
+                    self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
-                    self.conversation.context.last_playback_end = datetime.datetime.utcnow()
+                    gv = self.conversation.context
+                    gv.last_playback_end = datetime.datetime.utcnow()
+                    gv.last_spoken_response = ""
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:

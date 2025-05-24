@@ -2,7 +2,7 @@ import unittest
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from llm_responses import LLMResponses  # Replace 'your_module' with the actual module name
+from app.transcribe.db.llm_responses import LLMResponses
 
 
 class TestLLMResponses(unittest.TestCase):

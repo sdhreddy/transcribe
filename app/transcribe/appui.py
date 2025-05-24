@@ -506,6 +506,7 @@ class AppUI(ctk.CTk):
             if self.global_vars.read_response:
                 self.global_vars.audio_player_var.speech_text_available.set()
                 self.global_vars.last_tts_response = response_string
+                self.global_vars.last_spoken_response = response_string
             self.response_textbox.configure(state="normal")
             if response_string:
                 write_in_textbox(self.response_textbox, response_string)
@@ -866,8 +867,9 @@ def update_response_ui(responder: gr.GPTResponder,
         textbox.see("end")
         if (global_vars_module.continuous_read and
                 responder.streaming_complete.is_set() and
-                response != global_vars_module.last_tts_response):
+                response != global_vars_module.last_spoken_response):
             global_vars_module.last_tts_response = response
+            global_vars_module.last_spoken_response = response
             global_vars_module.set_read_response(True)
             global_vars_module.audio_player_var.speech_text_available.set()
             responder.streaming_complete.clear()

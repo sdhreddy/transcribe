@@ -7,8 +7,19 @@ Use the **Read Responses Continuously** switch to automatically hear every AI re
 Continuous Read Aloud helps users with accessibility needs or for hands‑free use.
 
 While audio is being spoken, speaker input capture is temporarily muted to avoid echo. If you speak while a response is playing, playback stops immediately so your words are transcribed.
-To fully eliminate echo, capture resumes only after a brief delay and any input matching the last spoken response within one second is ignored.
+To fully eliminate echo, capture resumes only after a brief delay and any input similar to the last spoken response within two seconds is ignored.
 
 If audio playback fails, ensure your speakers are enabled and `ffplay` from FFmpeg is installed and on your PATH.
 
 ![Screenshot](../assets/ReadResponses.png)
+
+### Adjust Speech Rate
+
+Add `tts_speech_rate` under the `General` section of `parameters.yaml` to control how quickly responses are spoken. A value of `1.0` is normal speed, while higher values play audio faster. Example:
+
+```yaml
+General:
+  tts_speech_rate: 1.3
+```
+
+The default is `1.3`, which provides a more natural pace.

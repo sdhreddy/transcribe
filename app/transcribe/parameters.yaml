@@ -85,6 +85,8 @@ General:
   continuous_read: Yes
   # The interval at which to ping the LLM for response
   llm_response_interval: 10
+  # Playback speed for read-aloud responses
+  tts_speech_rate: 1.3
 
 # This is equivalent to -c argument on command line
 # Command line argument takes precedence over value specified in parameters.yaml

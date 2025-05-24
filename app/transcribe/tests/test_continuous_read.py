@@ -51,6 +51,7 @@ class TestContinuousRead(unittest.TestCase):
         gv.audio_player_var = MagicMock()
         gv.continuous_read = True
         gv.last_tts_response = ""
+        gv.last_spoken_response = ""
         responder = MagicMock()
         responder.response = "assistant: [hi]"
         responder.streaming_complete.is_set.return_value = True

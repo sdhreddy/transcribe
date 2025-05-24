@@ -26,7 +26,11 @@ class TestAudioPlayer(unittest.TestCase):
         self.convo = MagicMock(spec=c.Conversation)
         self.convo.context = MagicMock()
         self.audio_player = AudioPlayer(convo=self.convo)
-        self.config = {'OpenAI': {'response_lang': 'english'}, 'english': 'en'}
+        self.config = {
+            'OpenAI': {'response_lang': 'english'},
+            'General': {'tts_speech_rate': 1.5},
+            'english': 'en'
+        }
 
     @patch('gtts.gTTS')
     @patch('subprocess.Popen')
@@ -71,7 +75,7 @@ class TestAudioPlayer(unittest.TestCase):
 
         self.assertFalse(self.audio_player.speech_text_available.is_set(), 'Threading Event was not cleared.')
         self.assertFalse(self.audio_player.read_response, 'Read response boolean was not cleared.')
-        # mock_play_audio.assert_called_once_with("Hello, this is a test.", 'en')
+        mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5)
         self.audio_player.stop_loop = True
 
     def test_get_language_code(self):
