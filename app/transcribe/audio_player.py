@@ -7,6 +7,11 @@ import os
 import time
 import tempfile
 import threading
+
+import subprocess  # nosec
+import playsound
+
+
 import gtts
 
 import simpleaudio
@@ -34,7 +39,8 @@ class AudioPlayer:
         self.temp_dir = tempfile.gettempdir()
         self.read_response = False
         self.stop_loop = False
-        self.is_playing = False
+        self.is_playing = False        self._playback_process = None
+
         self._play_obj = None
         self.play_thread = None
 
@@ -71,6 +77,38 @@ class AudioPlayer:
 
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
+
+            temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
+            os.close(temp_audio_file[0])
+
+            audio_obj.save(temp_audio_file[1])
+
+            self.is_playing = True
+            self._playback_process = subprocess.Popen(
+                ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet', temp_audio_file[1]],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                text=False
+            )
+            self._playback_process.wait()
+        except playsound.PlaysoundException as play_ex:
+            logger.error('Error when attempting to play audio.', exc_info=True)
+            logger.info(play_ex)
+        finally:
+            self.is_playing = False
+            self._playback_process = None
+            os.remove(temp_audio_file[1])
+
+    def stop_playback(self):
+        """Stop any active audio playback."""
+        if self._playback_process and self._playback_process.poll() is None:
+            try:
+                self._playback_process.kill()
+            except Exception:
+                logger.error('Failed to stop audio playback', exc_info=True)
+        self.is_playing = False
+        self._playback_process = None
+
             audio_obj.save(mp3_file[1])
             subprocess.call([
                 'ffmpeg', '-y', '-i', mp3_file[1], wav_file[1]
@@ -113,6 +151,7 @@ class AudioPlayer:
             os.remove(temp_audio_file[1])
 
 
+
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
         """
@@ -131,6 +170,9 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
+
+                self.play_audio(speech=final_speech, lang=lang_code)
+
 
                 self.start_playback(speech=final_speech, lang=lang_code)
                 while self.is_playing and self.stop_loop is False:

@@ -45,9 +45,14 @@ class TestAudioPlayer(unittest.TestCase):
             del sys.modules['global_vars']
 
     @patch('gtts.gTTS')
+
+    @patch('subprocess.Popen')
+    def test_play_audio_exception(self, mock_popen, mock_gtts):
+
     @patch('subprocess.call')
     @patch('simpleaudio.WaveObject.from_wave_file')
     def test_play_audio_exception(self, mock_wave, mock_call, mock_gtts):
+
         """
         Test the play_audio method when an exception occurs.
 
@@ -56,6 +61,11 @@ class TestAudioPlayer(unittest.TestCase):
         speech = "Hello, this is a test."
         lang = 'en'
         mock_gtts.return_value = MagicMock(spec=gTTS)
+
+        process_mock = MagicMock()
+        process_mock.wait.side_effect = playsound.PlaysoundException
+        mock_popen.return_value = process_mock
+
         mock_wave.side_effect = Exception('fail')
         mock_call.return_value = 0
 
