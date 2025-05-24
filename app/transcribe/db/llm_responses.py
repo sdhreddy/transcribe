@@ -100,7 +100,7 @@ class LLMResponses:
 
         self._metadata.create_all(self.engine)
 
-    def insert_response(self, invocation_id: int, conversation_id: int, text: str) -> int:
+    def insert_response(self, invocation_id: int, conversation_id: int, text: str, engine: Engine | None = None) -> int:
         """
         Inserts a response entry into the LLMResponses table.
 
@@ -119,7 +119,8 @@ class LLMResponses:
             'CreatedTime': datetime.datetime.utcnow()
         })
 
-        with Session(self.engine) as session:
+        db_engine = engine or self.engine
+        with Session(db_engine) as session:
             result = session.execute(stmt)
             session.commit()
 

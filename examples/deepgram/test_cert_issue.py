@@ -1,5 +1,8 @@
 # pip install cryptography
 import _ssl
+import pytest
+
+pytest.importorskip("cryptography", reason="cryptography package not available")
 from cryptography import x509
 
 
