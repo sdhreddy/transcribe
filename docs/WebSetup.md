@@ -28,6 +28,11 @@ This document describes how to run the Transcribe web application locally.
 
 The React app will proxy API requests to the FastAPI backend running on port 8000.
 
+Run automated tests with:
+```bash
+pytest tests_web
+```
+
 ## Docker
 You can also build and run using Docker:
 ```bash

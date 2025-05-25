@@ -106,7 +106,7 @@ Connect on LinkedIn to discuss further.
 [Developer Guide](./docs/DeveloperGuide.md)
 
 ## Web Version ##
-See [WebSetup](./docs/WebSetup.md) for running Transcribe in a browser using FastAPI and React. Docker instructions are also provided.
+See [WebSetup](./docs/WebSetup.md) for running Transcribe in a browser using FastAPI and React. Docker instructions are also provided. Architectural details are covered in [WebArchitecture](./docs/WebArchitecture.md).
 
 ## Mobile Strategy ##
 An outline for Android and cross-platform options is available in [MobilePlan](./docs/MobilePlan.md).
