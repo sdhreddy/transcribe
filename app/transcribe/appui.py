@@ -6,16 +6,16 @@ import webbrowser
 import pyperclip
 import customtkinter as ctk
 from tktooltip import ToolTip
-from audio_transcriber import AudioTranscriber
-import prompts
-from global_vars import TranscriptionGlobals, T_GLOBALS
-import constants
-import gpt_responder as gr
+from .audio_transcriber import AudioTranscriber
+from . import prompts
+from .global_vars import TranscriptionGlobals, T_GLOBALS
+from . import constants
+from . import gpt_responder as gr
 from tsutils.language import LANGUAGES_DICT
 from tsutils import utilities
 from tsutils import app_logging as al
 from tsutils import configuration
-from uicomp.selectable_text import SelectableText
+from .uicomp.selectable_text import SelectableText
 import numpy as np
 from PIL import Image
 from wordcloud import WordCloud
@@ -738,7 +738,7 @@ def popup_msg_no_close(title: str, msg: str):
     # Give a chance for the thread to initialize
     # When API key is not specified, need the thread to initialize to
     # allow summarize window to show and ultimately be closed.
-    time.sleep(0.1)
+    time.sleep(constants.POLL_INTERVAL_SECONDS)
 
 
 def popup_msg_close_button(title: str, msg: str):

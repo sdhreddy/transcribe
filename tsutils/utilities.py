@@ -10,11 +10,13 @@ import time
 valid_api_key: bool = False
 
 
-def merge(first: dict, second: dict, path=[]):
+def merge(first: dict, second: dict, path=None):
     """Recursively merge two dictionaries.
        For keys with different values, values in the second dictionary
        replace the values with current dictionary
     """
+    if path is None:
+        path = []
     if second is None:
         # No values to merge into first dict. Leave first dict unchanged.
         return first
