@@ -16,7 +16,7 @@ OpenAI:
   ai_model: gpt-4.1-mini
 # Local model file to use for transcription.
 # Can also be specified using the -m parameter on command line of the application
-  local_transcripton_model_file: 'base'
+  local_transcription_model_file: 'base'
 # Language in which ChatGPT should respond.
 # List of languages available for openAI is available at
 # https://platform.openai.com/docs/guides/speech-to-text/supported-languages
@@ -44,7 +44,7 @@ Together:
 
 WhisperCpp:
   # Can also be specified using the -m parameter on command line of the application
-  local_transcripton_model_file: 'base'
+  local_transcription_model_file: 'base'
 
 General:
   log_file: 'logs/Transcribe.log'

@@ -79,7 +79,7 @@ class WhisperSTTModel(STTModelInterface):
     """Speech to Text using the Whisper Local model
     """
     def __init__(self, stt_model_config: dict):
-        self.model = stt_model_config['local_transcripton_model_file']
+        self.model = stt_model_config['local_transcription_model_file']
         self.lang = stt_model_config['audio_lang']
         model_filename = MODELS_DIR + self.model + ".pt"
         self.model_name = self.model + ".pt"
@@ -266,18 +266,20 @@ class WhisperCPPSTTModel(STTModelInterface):
     """
     def __init__(self, stt_model_config: dict):
         self.lang = stt_model_config['audio_lang']
-        model = stt_model_config['local_transcripton_model_file']
+        try:
+            model = stt_model_config['local_transcription_model_file']
+        except KeyError as exc:
+            raise KeyError('Missing "local_transcription_model_file" in configuration for WhisperCpp') from exc
+
         self.model_filename = MODELS_DIR + model + ".bin"
         self.model = model
 
         if not os.path.isfile(self.model_filename):
-            print(f'Could not find the transcription model file: {self.model_filename}')
-            utilities.ensure_directory_exists(MODELS_DIR)
-            file_url = 'https://huggingface.co/ggerganov/whisper.cpp/resolve/main/' + model + '.bin'
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
+            raise FileNotFoundError(
+                f'WhisperCpp model file not found: {self.model_filename}. ' +
+                'Please download the file and place it at this location.')
 
-        print('[INFO] Using Whisper CPP for transcription.')
-        self.model = 'base'
+        print(f'Loading WhisperCpp model: {self.model_filename}')
 
     def set_lang(self, lang: str):
         """Set STT Language"""

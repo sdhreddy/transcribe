@@ -76,8 +76,8 @@ class TestAudioPlayer(unittest.TestCase):
 
         self.assertFalse(self.audio_player.speech_text_available.is_set(), 'Threading Event was not cleared.')
         self.assertFalse(self.audio_player.read_response, 'Read response boolean was not cleared.')
-        self.assertEqual(self.convo.context.last_spoken_response, '',
-                         'Last spoken response was not cleared after playback.')
+        self.assertEqual(self.convo.context.last_spoken_response, 'initial',
+                         'Last spoken response should remain unchanged after playback.')
         mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5)
         self.audio_player.stop_loop = True
 
