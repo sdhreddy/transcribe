@@ -1,7 +1,10 @@
 import unittest
+import os
+import sys
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from app.transcribe.db.summaries import Summary, Summaries
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from db.summaries import Summary, Summaries
 
 
 class TestSummaries(unittest.TestCase):

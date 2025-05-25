@@ -1,8 +1,11 @@
 import unittest
+import os
+import sys
 from sqlalchemy.sql import text
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from app.transcribe.db.llm_responses import LLMResponses
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from db.llm_responses import LLMResponses
 
 
 class TestLLMResponses(unittest.TestCase):

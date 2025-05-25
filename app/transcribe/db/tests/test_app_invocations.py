@@ -1,7 +1,10 @@
 import unittest
+import os
+import sys
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from app.transcribe.db.app_invocations import Invocation, ApplicationInvocations
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from db.app_invocations import Invocation, ApplicationInvocations
 
 
 class TestApplicationInvocations(unittest.TestCase):

@@ -81,6 +81,7 @@ Connect on LinkedIn to discuss further.
 - [Speech Mode](./docs/SpeechMode.md)
 - **New:** Toggle [Continuous Read Aloud](./docs/SpeechMode.md#speech-mode) from the UI using the switch in the bottom panel. Playback temporarily mutes speaker capture and stops if you start speaking. The preference is saved automatically.
 - Automatic echo suppression prevents the AI from responding to its own speech.
+- Spoken replies never repeat&mdash;only the newest answer is read aloud.
 - Configure TTS speed via `tts_speech_rate` in `parameters.yaml`.
 - [Save Content](./docs/SaveContent.md)
 - [Model Selection](./docs/ModelSelection.md)

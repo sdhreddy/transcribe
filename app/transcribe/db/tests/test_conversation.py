@@ -1,8 +1,11 @@
 import unittest
 from datetime import datetime
+import os
+import sys
 from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
-from app.transcribe.db.conversation import Conversation, Conversations
+sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
+from db.conversation import Conversation, Conversations
 
 
 class TestConversations(unittest.TestCase):
