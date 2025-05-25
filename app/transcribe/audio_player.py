@@ -114,10 +114,15 @@ class AudioPlayer:
                     sp_rec.enabled = prev_sp_state
                     gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
+
                     # Reset last_spoken_response so any queued text is cleared
                     # after playback completes. update_response_ui will
                     # populate this again when a new response arrives.
-                    gv.last_spoken_response = ""
+
+                    # Keep last_spoken_response so update_response_ui
+                    # can detect when a new response is generated and
+                    # avoid replaying the same audio multiple times.
+
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
