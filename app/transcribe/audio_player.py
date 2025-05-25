@@ -114,6 +114,9 @@ class AudioPlayer:
                     sp_rec.enabled = prev_sp_state
                     gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
+                    # Reset last_spoken_response so any queued text is cleared
+                    # after playback completes. update_response_ui will
+                    # populate this again when a new response arrives.
                     gv.last_spoken_response = ""
             time.sleep(0.1)
 
