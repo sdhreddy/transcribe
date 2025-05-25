@@ -4,8 +4,8 @@ import re
 import argparse
 from argparse import RawTextHelpFormatter
 import yaml
-from global_vars import TranscriptionGlobals
-import interactions  # noqa: E402 pylint: disable=C0413
+from .global_vars import TranscriptionGlobals
+from . import interactions  # noqa: E402 pylint: disable=C0413
 from tsutils import utilities, duration, configuration  # noqa: E402 pylint: disable=C0413
 from sdk import audio_recorder as ar  # noqa: E402 pylint: disable=C0413
 import openai

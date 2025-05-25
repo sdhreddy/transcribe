@@ -82,6 +82,9 @@ Connect on LinkedIn to discuss further.
 - **New:** Toggle [Continuous Read Aloud](./docs/SpeechMode.md#speech-mode) from the UI using the switch in the bottom panel. Playback temporarily mutes speaker capture and stops if you start speaking. The preference is saved automatically.
 - Automatic echo suppression prevents the AI from responding to its own speech.
 
+- Spoken replies never repeat&mdash;only the newest answer is read aloud.
+
+
  - Spoken replies never repeat&mdash;the queue is cleared after each answer so only the most recent response is spoken.
 
 - Spoken replies never repeat&mdash;only the newest answer is read aloud.

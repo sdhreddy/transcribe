@@ -11,8 +11,8 @@ import subprocess
 import datetime
 import playsound
 import gtts
-from conversation import Conversation
-import constants
+from .conversation import Conversation
+from . import constants
 from tsutils import app_logging as al
 from tsutils.language import LANGUAGES_DICT
 
@@ -53,18 +53,20 @@ class AudioPlayer:
         For large audio text, this could take several minutes.
         """
         logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        temp_audio_file_path = None
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
-            temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
-            os.close(temp_audio_file[0])
+            with tempfile.NamedTemporaryFile(
+                    dir=self.temp_dir, suffix='.mp3', delete=False) as tmp_file:
+                temp_audio_file_path = tmp_file.name
+                audio_obj.save(temp_audio_file_path)
 
-            audio_obj.save(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
                 if rate and rate != 1.0:
                     cmd += ['-af', f'atempo={rate}']
-                cmd.append(temp_audio_file[1])
+                cmd.append(temp_audio_file_path)
                 self.current_process = subprocess.Popen(
                     cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -72,12 +74,12 @@ class AudioPlayer:
                 if not self.conversation.context.audio_queue.empty():
                     self.stop_current_playback()
                     break
-                time.sleep(0.1)
-        except Exception as play_ex:
-            logger.error('Error when attempting to play audio.', exc_info=True)
-            logger.info(play_ex)
+                time.sleep(constants.POLL_INTERVAL_SECONDS)
+        except Exception:
+            logger.exception('Error when attempting to play audio.')
         finally:
-            os.remove(temp_audio_file[1])
+            if temp_audio_file_path and os.path.exists(temp_audio_file_path):
+                os.remove(temp_audio_file_path)
             with self.play_lock:
                 self.stop_current_playback()
 
@@ -114,6 +116,12 @@ class AudioPlayer:
                     sp_rec.enabled = prev_sp_state
                     gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
+
+                    # Keep last_spoken_response so update_response_ui
+                    # can detect when a new response is generated and
+                    # avoid replaying the same audio multiple times.
+            time.sleep(constants.POLL_INTERVAL_SECONDS)
+
 
                     # Reset last_spoken_response so any queued text is cleared
                     # after playback completes. update_response_ui will
