@@ -14,3 +14,4 @@ websockets
 requests
 httpx
 dataclasses-json
+SqlAlchemy==2.0.29
