@@ -1,6 +1,5 @@
 """Encapsulates all Speech to Text functionality
 """
-import sys
 import os
 import subprocess  # nosec
 import queue
@@ -15,9 +14,8 @@ import tempfile
 import pyaudiowpatch as pyaudio
 from difflib import SequenceMatcher
 # from db import AppDB as appdb
-import conversation  # noqa: E402 pylint: disable=C0413
-import constants  # noqa: E402 pylint: disable=C0413
-sys.path.append('../..')
+from . import conversation  # noqa: E402 pylint: disable=C0413
+from . import constants  # noqa: E402 pylint: disable=C0413
 import custom_speech_recognition as sr  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413
 from tsutils import duration, utilities  # noqa: E402 pylint: disable=C0413

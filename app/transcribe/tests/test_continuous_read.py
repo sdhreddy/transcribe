@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import sys
 import os
 from types import ModuleType
+import datetime
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 sys.modules['pyaudiowpatch'] = ModuleType('pyaudiowpatch')
 from tsutils import configuration
@@ -63,6 +64,26 @@ class TestContinuousRead(unittest.TestCase):
         responder.streaming_complete.is_set.return_value = False
         appui.update_response_ui(responder, textbox, label, slider)
         self.assertEqual(gv.audio_player_var.speech_text_available.set.call_count, 1)
+
+    def test_last_spoken_persists(self):
+        from app.transcribe import appui
+        Config._current_data = {
+            'General': {'llm_response_interval': 10},
+            'OpenAI': {'audio_lang': 'english', 'response_lang': 'english'}
+        }
+        gv = appui.global_vars_module = appui.TranscriptionGlobals()
+        gv.audio_player_var = MagicMock()
+        gv.continuous_read = True
+        responder = MagicMock()
+        responder.response = "assistant: [hello]"
+        responder.streaming_complete.is_set.return_value = True
+        textbox = MagicMock()
+        label = MagicMock()
+        slider = MagicMock()
+        slider.get.return_value = 10
+        appui.update_response_ui(responder, textbox, label, slider)
+        gv.last_playback_end = datetime.datetime.utcnow()
+        self.assertEqual(gv.last_spoken_response, responder.response)
 
 if __name__ == "__main__":
     unittest.main()

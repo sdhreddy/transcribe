@@ -18,3 +18,6 @@ PLAYBACK_IGNORE_WINDOW_SECONDS = 2.0
 IGNORE_SIMILARITY_THRESHOLD = 0.85
 # Default speech rate for TTS output (1.0 is normal speed)
 DEFAULT_TTS_SPEECH_RATE = 1.3
+# Interval (seconds) for polling loops while waiting for playback or
+# background threads. Exposed as a constant for clarity and easy tuning.
+POLL_INTERVAL_SECONDS = 0.1
