@@ -25,3 +25,6 @@ appdirs
 pillow==11.1.0
 wordcloud==1.9.4
 ffmpeg-python
+fastapi
+uvicorn
+websockets
