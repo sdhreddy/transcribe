@@ -49,7 +49,7 @@ def create_args() -> argparse.Namespace:
                             \nThis option is valid only for the -t (transcribe) option.')
     cmd_args.add_argument('-m', '--model', action='store', choices=[
         'tiny', 'base', 'small', 'medium', 'large-v1', 'large-v2', 'large-v3', 'large'],
-        default='base',
+        default=None,
         help='Specify the OpenAI Local Transcription model file to use.'
         '\nThe necessary model files will be downloaded once at run time.')  # noqa: E501  pylint: disable=C0115
     cmd_args.add_argument('-l', '--list_devices', action='store_true',
@@ -143,11 +143,8 @@ def update_args_config(args: argparse.Namespace, config: dict):
         config['OpenAI']['api_key'] = args.api_key
 
     if args.model is not None:
-        config['OpenAI']['local_transcripton_model_file'] = args.model
-        config['WhisperCpp']['local_transcripton_model_file'] = args.model
-    else:
-        config['OpenAI']['local_transcripton_model_file'] = 'base'
-        config['WhisperCpp']['local_transcripton_model_file'] = 'base'
+        config['OpenAI']['local_transcription_model_file'] = args.model
+        config['WhisperCpp']['local_transcription_model_file'] = args.model
 
     if args.api:
         config['General']['use_api'] = args.api

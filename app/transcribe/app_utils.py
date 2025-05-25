@@ -150,7 +150,7 @@ def create_transcriber(
             config=config)
     elif name.lower() == 'whisper.cpp':
         stt_model_config: dict = {
-            'local_transcripton_model_file': 'ggml-' + config['WhisperCpp']['local_transcripton_model_file'],
+            'local_transcription_model_file': 'ggml-' + config['WhisperCpp']['local_transcription_model_file'],
             'audio_lang': get_language_code(config['OpenAI']['audio_lang'])
         }
         model = model_factory.get_stt_model_instance(
@@ -165,7 +165,7 @@ def create_transcriber(
     elif name.lower() == 'whisper' and not api:
         stt_model_config: dict = {
             'api_key': config['OpenAI']['api_key'],
-            'local_transcripton_model_file': config['OpenAI']['local_transcripton_model_file'],
+            'local_transcription_model_file': config['OpenAI']['local_transcription_model_file'],
             'audio_lang': get_language_code(config['OpenAI']['audio_lang'])
         }
         model = model_factory.get_stt_model_instance(
