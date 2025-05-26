@@ -1,7 +1,22 @@
-from fastapi import FastAPI, WebSocket, Depends, HTTPException
+from fastapi import (
+    FastAPI,
+    WebSocket,
+    Depends,
+    HTTPException,
+    UploadFile,
+    File,
+    Form,
+)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+import tempfile
+import os
+import io
+import whisper
+import gtts
+import openai
 
 app = FastAPI()
 
@@ -31,6 +46,14 @@ class Setting(Base):
 
 Base.metadata.create_all(bind=engine)
 
+STT_MODELS = [
+    "tiny",
+    "base",
+    "small",
+    "medium",
+    "large",
+]
+
 # Dependency to get DB session
 
 def get_db():
@@ -58,11 +81,50 @@ async def write_setting(key: str, value: str, db=Depends(get_db)):
     db.commit()
     return {"key": setting.key, "value": setting.value}
 
-# Placeholder endpoint for transcription
+# Speech to text using whisper
 @app.post("/api/transcribe")
-async def transcribe_audio():
-    """Stub endpoint for audio transcription."""
-    return {"text": "Transcription result"}
+async def transcribe_audio(
+    file: UploadFile = File(...), model: str = Form("base")
+):
+    """Transcribe uploaded audio using whisper."""
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as tmp:
+        tmp.write(await file.read())
+        tmp_path = tmp.name
+
+    model_obj = whisper.load_model(model)
+    result = model_obj.transcribe(tmp_path)
+    os.remove(tmp_path)
+    return {"text": result.get("text", "")}
+
+
+@app.get("/api/models")
+async def list_models():
+    """Return available speech to text models."""
+    return {"models": STT_MODELS}
+
+
+@app.post("/api/tts")
+async def text_to_speech(text: str = Form(...), lang: str = Form("en")):
+    """Convert text to speech and return mp3 data."""
+    tts = gtts.gTTS(text, lang=lang)
+    with tempfile.NamedTemporaryFile(suffix=".mp3", delete=False) as tmp:
+        tts.save(tmp.name)
+        with open(tmp.name, "rb") as af:
+            audio_bytes = af.read()
+    os.remove(tmp.name)
+    return StreamingResponse(io.BytesIO(audio_bytes), media_type="audio/mpeg")
+
+
+@app.post("/api/chat")
+async def chat(message: str = Form(...), model: str = Form("gpt-3.5-turbo")):
+    """Simple chat endpoint using OpenAI LLM."""
+    client = openai.OpenAI()
+    completion = client.chat.completions.create(
+        model=model,
+        messages=[{"role": "user", "content": message}],
+    )
+    text = completion.choices[0].message.content
+    return {"text": text}
 
 # WebSocket echo server for streaming
 @app.websocket("/ws")

@@ -14,3 +14,5 @@ websockets
 requests
 httpx
 dataclasses-json
+sqlalchemy
+appdirs
