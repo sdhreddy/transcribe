@@ -4,7 +4,12 @@ import copy
 import subprocess
 import zipfile
 import openai
-from appdirs import user_data_dir
+try:
+    from appdirs import user_data_dir  # type: ignore
+except Exception:  # pragma: no cover - fallback for environments without appdirs
+    def user_data_dir(appname: str, appauthor: str | None = None, roaming: bool = False) -> str:
+        base = os.path.expanduser("~/.local/share")
+        return os.path.join(base, appname)
 import time
 
 valid_api_key: bool = False

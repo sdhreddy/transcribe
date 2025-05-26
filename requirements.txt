@@ -14,9 +14,8 @@ websockets
 requests
 httpx
 dataclasses-json
-
 sqlalchemy
 appdirs
-
 SqlAlchemy==2.0.29
+
 
