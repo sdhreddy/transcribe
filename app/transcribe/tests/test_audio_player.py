@@ -26,6 +26,7 @@ class TestAudioPlayer(unittest.TestCase):
         self.convo = MagicMock(spec=c.Conversation)
         self.convo.context = MagicMock()
         self.convo.context.last_spoken_response = "initial"
+        self.convo.context.real_time_read = False
         self.audio_player = AudioPlayer(convo=self.convo)
         self.config = {
             'OpenAI': {'response_lang': 'english'},
