@@ -90,7 +90,35 @@ class AudioPlayer:
         self.speech_rate = rate
 
         while self.stop_loop is False:
-            if self.speech_text_available.is_set() and self.read_response:
+            gv = self.conversation.context
+
+            if gv.real_time_read and self.read_response:
+                speech = self._get_speech_text()
+                final_speech = self._process_speech_text(speech)
+
+                start = 0
+                if final_speech.startswith(gv.last_spoken_response):
+                    start = len(gv.last_spoken_response)
+                else:
+                    gv.last_spoken_response = ""
+
+                new_text = final_speech[start:]
+
+                if new_text:
+                    sp_rec = gv.speaker_audio_recorder
+                    prev_sp_state = sp_rec.enabled
+                    sp_rec.enabled = False
+                    try:
+                        gv.last_spoken_response += new_text
+                        self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                    finally:
+                        time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
+                        sp_rec.enabled = prev_sp_state
+                        gv.last_playback_end = datetime.datetime.utcnow()
+                elif gv.responder.streaming_complete.is_set():
+                    self.read_response = False
+
+            elif self.speech_text_available.is_set() and self.read_response:
                 self.speech_text_available.clear()
                 speech = self._get_speech_text()
                 final_speech = self._process_speech_text(speech)
@@ -102,17 +130,25 @@ class AudioPlayer:
 
                 self.read_response = False
                 # Disable audio capture to avoid echo
-                sp_rec = self.conversation.context.speaker_audio_recorder
+                sp_rec = gv.speaker_audio_recorder
                 # Only disable speaker capture so user mic remains active and
                 # playback can be interrupted by new speech.
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
-                    self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                    if gv.real_time_read:
+                        start = 0
+                        if final_speech.startswith(gv.last_spoken_response):
+                            start = len(gv.last_spoken_response)
+                        new_text = final_speech[start:]
+                        if new_text:
+                            gv.last_spoken_response += new_text
+                            self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                    else:
+                        self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
-                    gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
 
                     # Reset last_spoken_response so any queued text is cleared

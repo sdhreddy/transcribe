@@ -865,14 +865,19 @@ def update_response_ui(responder: gr.GPTResponder,
         write_in_textbox(textbox, response)
         textbox.configure(state="disabled")
         textbox.see("end")
-        if (global_vars_module.continuous_read and
-                responder.streaming_complete.is_set() and
-                response != global_vars_module.last_spoken_response):
-            global_vars_module.last_tts_response = response
-            global_vars_module.last_spoken_response = response
-            global_vars_module.set_read_response(True)
-            global_vars_module.audio_player_var.speech_text_available.set()
-            responder.streaming_complete.clear()
+        if global_vars_module.continuous_read:
+            if global_vars_module.real_time_read:
+                if not response.startswith(global_vars_module.last_tts_response):
+                    global_vars_module.last_spoken_response = ""
+                if response != global_vars_module.last_tts_response:
+                    global_vars_module.last_tts_response = response
+            elif (responder.streaming_complete.is_set() and
+                  response != global_vars_module.last_spoken_response):
+                global_vars_module.last_tts_response = response
+                global_vars_module.last_spoken_response = response
+                global_vars_module.set_read_response(True)
+                global_vars_module.audio_player_var.speech_text_available.set()
+                responder.streaming_complete.clear()
 
     update_interval = int(update_interval_slider.get())
     responder.update_response_interval(update_interval)

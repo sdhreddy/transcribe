@@ -139,6 +139,10 @@ class GPTResponder:
                     self._update_conversation(persona=constants.PERSONA_ASSISTANT,
                                               response=collected_messages,
                                               update_previous=True)
+                    gv = self.conversation.context
+                    if gv.continuous_read and gv.real_time_read:
+                        gv.set_read_response(True)
+                        gv.audio_player_var.speech_text_available.set()
             self.streaming_complete.set()
             return collected_messages
 

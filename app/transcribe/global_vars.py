@@ -34,6 +34,8 @@ class TranscriptionGlobals(Singleton.Singleton):
     last_tts_response: str = ""
     # Last response actually spoken out loud
     last_spoken_response: str = ""
+    # Speak streaming text as it arrives
+    real_time_read: bool = False
     # Timestamp when the last TTS playback finished
     last_playback_end: datetime.datetime = None
     # LLM Response to an earlier conversation
@@ -84,6 +86,7 @@ class TranscriptionGlobals(Singleton.Singleton):
         self.continuous_read = False
         self.last_tts_response = ""
         self.last_spoken_response = ""
+        self.real_time_read = False
         self.last_playback_end = None
         self._initialized = True
 
@@ -120,6 +123,10 @@ class TranscriptionGlobals(Singleton.Singleton):
     def set_continuous_read(self, value: bool):
         """Toggle continuous read aloud of responses"""
         self.continuous_read = value
+
+    def set_real_time_read(self, value: bool):
+        """Toggle real-time read aloud of streaming responses"""
+        self.real_time_read = value
 
 
 # Instantiate a single copy of globals here itself
