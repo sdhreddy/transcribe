@@ -87,6 +87,8 @@ General:
   llm_response_interval: 10
   # Playback speed for read-aloud responses
   tts_speech_rate: 1.3
+  # Begin speaking before the full response is displayed
+  real_time_read: No
 
 # This is equivalent to -c argument on command line
 # Command line argument takes precedence over value specified in parameters.yaml

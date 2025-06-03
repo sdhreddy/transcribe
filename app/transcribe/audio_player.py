@@ -107,12 +107,21 @@ class AudioPlayer:
                 # playback can be interrupted by new speech.
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
+                gv = self.conversation.context
                 try:
-                    self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                    if gv.real_time_read:
+                        start = 0
+                        if final_speech.startswith(gv.last_spoken_response):
+                            start = len(gv.last_spoken_response)
+                        new_text = final_speech[start:]
+                        if new_text:
+                            gv.last_spoken_response += new_text
+                            self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                    else:
+                        self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
-                    gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
 
                     # Reset last_spoken_response so any queued text is cleared
