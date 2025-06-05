@@ -678,6 +678,7 @@ class AppUI(ctk.CTk):
                 # Allow AudioPlayer to speak the entire response when triggered
                 self.global_vars.last_spoken_response = ""
 
+
             self.response_textbox.configure(state="normal")
             if response_string:
                 write_in_textbox(self.response_textbox, response_string)

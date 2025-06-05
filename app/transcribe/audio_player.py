@@ -18,12 +18,14 @@ logger = al.get_module_logger(al.AUDIO_PLAYER_LOGGER)
 class AudioPlayer:
     """Play text to audio."""
 
+
 class AudioPlayer:    """Play text to audio."""
 
     """High‑level helper that converts text into speech (gTTS ➜ ffplay) and
     plays it either once (\"Suggest Response and Read\") or incrementally in
     real time (\"Read Responses Continuously\").
     """
+
 
 
     def __init__(self, convo: Conversation):
@@ -208,8 +210,10 @@ class AudioPlayer:    """Play text to audio."""
                         gv.last_spoken_response += new_text
 
 
+
                         if self.play_audio(new_text, lang_code, self.speech_rate):
                             gv.last_spoken_response += new_text
+
 
 
                     finally:
@@ -261,14 +265,17 @@ class AudioPlayer:    """Play text to audio."""
                         gv.last_spoken_response = final_speech
 
 
+
                     if self.play_audio(speech, lang_code, self.speech_rate):
                         gv.last_spoken_response = speech
+
 
 
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_state
                     gv.last_playback_end = datetime.datetime.utcnow()
+                    gv.set_read_response(False)
 
                     gv.set_read_response(False)
 

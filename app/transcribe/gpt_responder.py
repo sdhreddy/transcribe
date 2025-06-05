@@ -2,15 +2,13 @@ import datetime
 import time
 from enum import Enum
 import threading
+
 # import pprint
 import openai
 import prompts
 import conversation
 import constants
-from db import (
-    AppDB as appdb,
-    llm_responses as llmrdb,
-    summaries as s)
+from db import AppDB as appdb, llm_responses as llmrdb, summaries as s
 from tsutils import app_logging as al
 from tsutils import duration, utilities
 
@@ -19,30 +17,32 @@ logger = al.get_module_logger(al.GPT_RESPONDER_LOGGER)
 
 
 class InferenceEnum(Enum):
-    """Supported Chat Inference Providers
-    """
+    """Supported Chat Inference Providers"""
+
     OPENAI = 1
     TOGETHER = 2
 
 
 class GPTResponder:
-    """Handles all interactions with openAI LLM / ChatGPT
-    """
+    """Handles all interactions with openAI LLM / ChatGPT"""
+
     # By default we do not ping LLM to get data
     enabled: bool = False
     model: str = None
     llm_client = None
 
-    def __init__(self,
-                 config: dict,
-                 convo: conversation.Conversation,
-                 file_name: str,
-                 save_to_file: bool = False,
-                 openai_module=openai):
+    def __init__(
+        self,
+        config: dict,
+        convo: conversation.Conversation,
+        file_name: str,
+        save_to_file: bool = False,
+        openai_module=openai,
+    ):
         logger.info(GPTResponder.__name__)
         # This var is used by UI to populate the response textbox
         self.response = prompts.INITIAL_RESPONSE
-        self.llm_response_interval = config['General']['llm_response_interval']
+        self.llm_response_interval = config["General"]["llm_response_interval"]
         self.conversation = convo
         self.config = config
         self.save_response_to_file = save_to_file
@@ -51,37 +51,38 @@ class GPTResponder:
         self.streaming_complete = threading.Event()
 
     def summarize(self) -> str:
-        """Ping LLM to get a summary of the conversation.
-        """
+        """Ping LLM to get a summary of the conversation."""
         logger.info(GPTResponder.summarize.__name__)
 
-        chat_inference_provider = self.config['General']['chat_inference_provider']
-        if chat_inference_provider == 'openai':
-            settings_section = 'OpenAI'
-        elif chat_inference_provider == 'together':
-            settings_section = 'Together'
+        chat_inference_provider = self.config["General"]["chat_inference_provider"]
+        if chat_inference_provider == "openai":
+            settings_section = "OpenAI"
+        elif chat_inference_provider == "together":
+            settings_section = "Together"
 
-        api_key = self.config[settings_section]['api_key']
-        base_url = self.config[settings_section]['base_url']
-        model = self.config[settings_section]['ai_model']
+        api_key = self.config[settings_section]["api_key"]
+        base_url = self.config[settings_section]["base_url"]
+        model = self.config[settings_section]["ai_model"]
 
-        if not utilities.is_api_key_valid(api_key=api_key, base_url=base_url, model=model):
+        if not utilities.is_api_key_valid(
+            api_key=api_key, base_url=base_url, model=model
+        ):
             return None
 
-        with duration.Duration(name='OpenAI Summarize', screen=False):
-            timeout: int = self.config['OpenAI']['summarize_request_timeout_seconds']
-            temperature: float = self.config['OpenAI']['temperature']
+        with duration.Duration(name="OpenAI Summarize", screen=False):
+            timeout: int = self.config["OpenAI"]["summarize_request_timeout_seconds"]
+            temperature: float = self.config["OpenAI"]["temperature"]
             prompt_content = self.conversation.get_merged_conversation_summary()
             prompt_api_message = prompts.create_multiturn_prompt(prompt_content)
             last_convo_id = int(prompt_content[-1][2])
             # self._pretty_print_openai_request(prompt_api_message)
             summary_response = self.llm_client.chat.completions.create(
-                    model=self.model,
-                    messages=prompt_api_message,
-                    temperature=temperature,
-                    timeout=timeout,
-                    stream=True
-                )
+                model=self.model,
+                messages=prompt_api_message,
+                temperature=temperature,
+                timeout=timeout,
+                stream=True,
+            )
             collected_messages = ""
             for chunk in summary_response:
                 chunk_message = chunk.choices[0].delta  # extract the message
@@ -99,35 +100,35 @@ class GPTResponder:
 
     def _get_settings_section(self, provider: str) -> str:
         """Get the settings section based on the chat inference provider."""
-        if provider == 'openai':
-            return 'OpenAI'
-        elif provider == 'together':
-            return 'Together'
+        if provider == "openai":
+            return "OpenAI"
+        elif provider == "together":
+            return "Together"
         raise ValueError(f"Unsupported chat inference provider: {provider}")
 
     def _get_api_settings(self, settings_section: str):
         """Retrieve API settings from the configuration."""
-        api_key = self.config[settings_section]['api_key']
-        base_url = self.config[settings_section]['base_url']
-        model = self.config[settings_section]['ai_model']
+        api_key = self.config[settings_section]["api_key"]
+        base_url = self.config[settings_section]["base_url"]
+        model = self.config[settings_section]["ai_model"]
         return api_key, base_url, model
 
     def _get_openai_settings(self) -> (int, float):
         """Retrieve OpenAI-specific settings from the configuration."""
-        timeout = self.config['OpenAI']['response_request_timeout_seconds']
-        temperature = self.config['OpenAI']['temperature']
+        timeout = self.config["OpenAI"]["response_request_timeout_seconds"]
+        temperature = self.config["OpenAI"]["temperature"]
         return timeout, temperature
 
     def _get_llm_response(self, messages, temperature, timeout) -> str:
         """Send a request to the LLM and process the streaming response."""
         self.streaming_complete.clear()
-        with duration.Duration(name='OpenAI Chat Completion', screen=False):
+        with duration.Duration(name="OpenAI Chat Completion", screen=False):
             multi_turn_response = self.llm_client.chat.completions.create(
                 model=self.model,
                 messages=messages,
                 temperature=temperature,
                 timeout=timeout,
-                stream=True
+                stream=True,
             )
 
             collected_messages = ""
@@ -136,9 +137,11 @@ class GPTResponder:
                 if chunk_message.content:
                     message_text = chunk_message.content
                     collected_messages += message_text
-                    self._update_conversation(persona=constants.PERSONA_ASSISTANT,
-                                              response=collected_messages,
-                                              update_previous=True)
+                    self._update_conversation(
+                        persona=constants.PERSONA_ASSISTANT,
+                        response=collected_messages,
+                        update_previous=True,
+                    )
                     gv = self.conversation.context
                     if gv.continuous_read and gv.real_time_read:
                         gv.set_read_response(True)
@@ -165,24 +168,33 @@ class GPTResponder:
         logger.info(GPTResponder.generate_response_from_transcript_no_check.__name__)
 
         try:
-            chat_inference_provider = self.config['General']['chat_inference_provider']
+            chat_inference_provider = self.config["General"]["chat_inference_provider"]
             settings_section = self._get_settings_section(chat_inference_provider)
             api_key, base_url, model = self._get_api_settings(settings_section)
 
-            if not utilities.is_api_key_valid(api_key=api_key, base_url=base_url, model=model):
+            if not utilities.is_api_key_valid(
+                api_key=api_key, base_url=base_url, model=model
+            ):
                 return None
 
             timeout, temperature = self._get_openai_settings()
-            multiturn_prompt_content = self.conversation.get_merged_conversation_response(
-                length=constants.MAX_TRANSCRIPTION_PHRASES_FOR_LLM)
+            multiturn_prompt_content = (
+                self.conversation.get_merged_conversation_response(
+                    length=constants.MAX_TRANSCRIPTION_PHRASES_FOR_LLM
+                )
+            )
             last_convo_id = int(multiturn_prompt_content[-1][2])
-            multiturn_prompt_api_message = prompts.create_multiturn_prompt(multiturn_prompt_content)
-            collected_messages = self._get_llm_response(multiturn_prompt_api_message, temperature, timeout)
+            multiturn_prompt_api_message = prompts.create_multiturn_prompt(
+                multiturn_prompt_content
+            )
+            collected_messages = self._get_llm_response(
+                multiturn_prompt_api_message, temperature, timeout
+            )
             self._insert_response_in_db(last_convo_id, collected_messages)
 
         except Exception as e:
             logger.error(f"Error in generate_response_from_transcript_no_check: {e}")
-            print(f'Error getting response from LLM: {e}')
+            print(f"Error getting response from LLM: {e}")
             return None
 
         self._save_response_to_file(collected_messages)
@@ -209,7 +221,9 @@ class GPTResponder:
         try:
             if self.llm_client is not None:
                 self.llm_client.close()
-            self.llm_client = self.openai_module.OpenAI(api_key=api_key, base_url=base_url)
+            self.llm_client = self.openai_module.OpenAI(
+                api_key=api_key, base_url=base_url
+            )
         except Exception as e:
             raise ConnectionError(f"Failed to create OpenAI client: {e}")
 
@@ -226,20 +240,20 @@ class GPTResponder:
         if input_str is None:
             raise ValueError("input_str cannot be None")
 
-        lines = input_str.split(sep='\n')
+        lines = input_str.split(sep="\n")
         response_lines = []
 
         for line in lines:
             # Skip any responses that contain content like
             # Speaker 1: <Some statement>
             # This is generated content added by OpenAI that can be skipped
-            if 'Speaker' in line and ':' in line:
+            if "Speaker" in line and ":" in line:
                 continue
-            response_lines.append(line.strip().strip('[').strip(']'))
+            response_lines.append(line.strip().strip("[").strip("]"))
 
         # Create a list and then use that to create a string for
         # performance reasons, since strings are immutable in python
-        response = ''.join(response_lines)
+        response = "".join(response_lines)
         return response
 
     def generate_response_from_transcript(self) -> str:
@@ -256,7 +270,7 @@ class GPTResponder:
         logger.info("generate_response_from_transcript called")
 
         if not self.enabled:
-            return ''
+            return ""
 
         return self.generate_response_from_transcript_no_check()
 
@@ -270,22 +284,24 @@ class GPTResponder:
         """
         try:
             logger.info(GPTResponder.generate_response_for_selected_text.__name__)
-            chat_inference_provider = self.config['General']['chat_inference_provider']
+            chat_inference_provider = self.config["General"]["chat_inference_provider"]
             settings_section = self._get_settings_section(chat_inference_provider)
             api_key, base_url, model = self._get_api_settings(settings_section)
 
             timeout, temperature = self._get_openai_settings()
 
-            if not utilities.is_api_key_valid(api_key=api_key, base_url=base_url, model=model):
+            if not utilities.is_api_key_valid(
+                api_key=api_key, base_url=base_url, model=model
+            ):
                 return None
 
             prompt = prompts.create_prompt_for_text(text=text, config=self.config)
             collected_messages = self._get_llm_response(prompt, temperature, timeout)
 
         except Exception as exception:
-            print('Error when attempting to get a response from LLM.')
+            print("Error when attempting to get a response from LLM.")
             print(exception)
-            logger.error('Error when attempting to get a response from LLM.')
+            logger.error("Error when attempting to get a response from LLM.")
             logger.exception(exception)
             return prompts.INITIAL_RESPONSE
 
@@ -297,22 +313,23 @@ class GPTResponder:
 
     def _save_response_to_file(self, text: str):
         if self.save_response_to_file:
-            with open(file=self.response_file, mode="a", encoding='utf-8') as f:
-                f.write(f'{datetime.datetime.now()} - {text}\n')
+            with open(file=self.response_file, mode="a", encoding="utf-8") as f:
+                f.write(f"{datetime.datetime.now()} - {text}\n")
 
     def _update_conversation(self, response, persona, update_previous=False):
         """Update the internaal conversation state"""
         logger.info(GPTResponder._update_conversation.__name__)
-        if response != '':
+        if response != "":
             self.response = response
-            self.conversation.update_conversation(persona=persona,
-                                                  text=response,
-                                                  time_spoken=datetime.datetime.utcnow(),
-                                                  update_previous=update_previous)
+            self.conversation.update_conversation(
+                persona=persona,
+                text=response,
+                time_spoken=datetime.datetime.utcnow(),
+                update_previous=update_previous,
+            )
 
     def respond_to_transcriber(self, transcriber):
-        """Thread method to continously update the transcript
-        """
+        """Thread method to continously update the transcript"""
         while True:
 
             # Attempt to get responses only if transcript has changed
@@ -326,7 +343,9 @@ class GPTResponder:
                     self.generate_response_from_transcript()
 
                 end_time = time.time()  # Measure end time
-                execution_time = end_time - start_time  # Calculate time to execute the function
+                execution_time = (
+                    end_time - start_time
+                )  # Calculate time to execute the function
 
                 remaining_time = self.llm_response_interval - execution_time
                 if remaining_time > 0:
@@ -337,79 +356,86 @@ class GPTResponder:
                 time.sleep(self.llm_response_interval)
 
     def update_response_interval(self, interval):
-        """Change the interval for pinging LLM
-        """
+        """Change the interval for pinging LLM"""
         # Very chatty log statement
         # logger.info(GPTResponder.update_response_interval.__name__)
         self.llm_response_interval = interval
 
     def _pretty_print_openai_request(self, message: str):
         """Format the openAI request in a nice print format"""
-        print('[')
+        print("[")
         for item in message:
-            print('  {')
+            print("  {")
             print(f'    \'role\': \'{item["role"]}\'')
             print(f'    \'content\': \'{item["content"]}\'')
-            print('  }')
+            print("  }")
 
-        print(']')
+        print("]")
 
 
 class OpenAIResponder(GPTResponder):
     """Uses OpenAI for Chat Inference"""
 
-    def __init__(self,
-                 config: dict,
-                 convo: conversation.Conversation,
-                 response_file_name: str,
-                 save_to_file: bool = False,
-                 base_url: str = None):
+    def __init__(
+        self,
+        config: dict,
+        convo: conversation.Conversation,
+        response_file_name: str,
+        save_to_file: bool = False,
+        base_url: str = None,
+    ):
         logger.info(OpenAIResponder.__name__)
         self.config = config
-        api_key = self.config['OpenAI']['api_key']
-        base_url = self.config['OpenAI']['base_url']
+        api_key = self.config["OpenAI"]["api_key"]
+        base_url = self.config["OpenAI"]["base_url"]
         self.llm_client = openai.OpenAI(api_key=api_key, base_url=base_url)
-        self.model = self.config['OpenAI']['ai_model']
-        stt = self.config['General']['stt']
-        print(f'[INFO] Using {stt} for inference. Model: {self.model}')
-        super().__init__(config=self.config,
-                         convo=convo,
-                         save_to_file=save_to_file,
-                         file_name=response_file_name)
+        self.model = self.config["OpenAI"]["ai_model"]
+        stt = self.config["General"]["stt"]
+        print(f"[INFO] Using {stt} for inference. Model: {self.model}")
+        super().__init__(
+            config=self.config,
+            convo=convo,
+            save_to_file=save_to_file,
+            file_name=response_file_name,
+        )
 
 
 class TogetherAIResponder(GPTResponder):
     """Uses TogetherAI for Chat Inference"""
 
-    def __init__(self,
-                 config: dict,
-                 convo: conversation.Conversation,
-                 response_file_name: str,
-                 save_to_file: bool = False):
+    def __init__(
+        self,
+        config: dict,
+        convo: conversation.Conversation,
+        response_file_name: str,
+        save_to_file: bool = False,
+    ):
         logger.info(TogetherAIResponder.__name__)
         self.config = config
-        api_key = self.config['Together']['api_key']
-        base_url = self.config['Together']['base_url']
-        self.llm_client = openai.OpenAI(api_key=api_key,
-                                        base_url=base_url)
-        self.model = self.config['Together']['ai_model']
-        print(f'[INFO] Using Together AI for inference. Model: {self.model}')
-        super().__init__(config=self.config,
-                         convo=convo,
-                         save_to_file=save_to_file,
-                         file_name=response_file_name)
+        api_key = self.config["Together"]["api_key"]
+        base_url = self.config["Together"]["base_url"]
+        self.llm_client = openai.OpenAI(api_key=api_key, base_url=base_url)
+        self.model = self.config["Together"]["ai_model"]
+        print(f"[INFO] Using Together AI for inference. Model: {self.model}")
+        super().__init__(
+            config=self.config,
+            convo=convo,
+            save_to_file=save_to_file,
+            file_name=response_file_name,
+        )
 
 
 class InferenceResponderFactory:
-    """Factory class to get the appropriate Inference Provider / GPT Provider
-    """
-    def get_responder_instance(self,
-                               provider: InferenceEnum,
-                               config: dict,
-                               convo: conversation.Conversation,
-                               response_file_name: str,
-                               save_to_file: bool = False,
-                               ) -> GPTResponder:
+    """Factory class to get the appropriate Inference Provider / GPT Provider"""
+
+    def get_responder_instance(
+        self,
+        provider: InferenceEnum,
+        config: dict,
+        convo: conversation.Conversation,
+        response_file_name: str,
+        save_to_file: bool = False,
+    ) -> GPTResponder:
         """Get the appropriate Inference Provider class instance
         Args:
           provider: InferenceEnum: The Inference provider enum
@@ -419,21 +445,27 @@ class InferenceResponderFactory:
           response_file_name: str: Filename for saving LLM responses
         """
         if not isinstance(provider, InferenceEnum):
-            raise TypeError('InferenceResponderFactory: provider should be an instance of InferenceEnum')
+            raise TypeError(
+                "InferenceResponderFactory: provider should be an instance of InferenceEnum"
+            )
 
         if provider == InferenceEnum.OPENAI:
-            return OpenAIResponder(config=config,
-                                   convo=convo,
-                                   save_to_file=save_to_file,
-                                   response_file_name=response_file_name)
+            return OpenAIResponder(
+                config=config,
+                convo=convo,
+                save_to_file=save_to_file,
+                response_file_name=response_file_name,
+            )
         elif provider == InferenceEnum.TOGETHER:
-            return TogetherAIResponder(config=config,
-                                       convo=convo,
-                                       save_to_file=save_to_file,
-                                       response_file_name=response_file_name)
+            return TogetherAIResponder(
+                config=config,
+                convo=convo,
+                save_to_file=save_to_file,
+                response_file_name=response_file_name,
+            )
 
         raise ValueError("Unknown Inference Provider type")
 
 
 if __name__ == "__main__":
-    print('GPTResponder')
+    print("GPTResponder")

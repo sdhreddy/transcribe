@@ -60,6 +60,12 @@ class TestAudioPlayer(unittest.TestCase):
             self.audio_player.play_audio(speech, lang)
             self.assertIn("Error when attempting to play audio.", log.output[0])
 
+
+
+        with self.assertLogs(level="ERROR") as log:
+            self.audio_player.play_audio(speech, lang)
+            self.assertIn("Error when attempting to play audio.", log.output[0])
+
         with self.assertLogs(level='ERROR') as log:
             result = self.audio_player.play_audio(speech, lang)
 
@@ -83,6 +89,7 @@ class TestAudioPlayer(unittest.TestCase):
 
         self.assertFalse(result)
         proc.terminate.assert_called()
+
 
 
     @patch.object(AudioPlayer, "play_audio")
@@ -135,6 +142,11 @@ class TestAudioPlayer(unittest.TestCase):
 
     @patch.object(AudioPlayer, "play_audio")
 
+
+        self.audio_player.stop_loop = True
+
+    @patch.object(AudioPlayer, "play_audio")
+
         self.audio_player.stop_loop = True
 
     @patch.object(AudioPlayer, "play_audio")
@@ -177,6 +189,7 @@ class TestAudioPlayer(unittest.TestCase):
         thread = threading.Thread(
             target=self.audio_player.play_audio_loop, args=(self.config,)
         )
+
 
 
         thread = threading.Thread(target=self.audio_player.play_audio_loop, args=(self.config,))
