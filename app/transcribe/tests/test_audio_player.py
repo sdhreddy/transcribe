@@ -50,6 +50,7 @@ class TestAudioPlayer(unittest.TestCase):
         with self.assertLogs(level='ERROR') as log:
             result = self.audio_player.play_audio(speech, lang)
 
+
             self.assertFalse(result)
 
             self.assertIn('Error when attempting to play audio.', log.output[0])

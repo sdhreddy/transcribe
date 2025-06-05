@@ -20,8 +20,7 @@ logger = al.get_module_logger(al.AUDIO_PLAYER_LOGGER)
 
 
 class AudioPlayer:
-    """Play text to audio.
-    """
+    """Play text to audio."""
 
     def __init__(self, convo: Conversation):
         logger.info(self.__class__.__name__)
@@ -54,6 +53,13 @@ class AudioPlayer:
         If ``speech_text_available`` is set while audio is playing, playback is
         interrupted and ``False`` is returned so the caller can retry with the
         latest text.
+
+        """
+        logger.info(
+            f"{self.__class__.__name__} - Playing audio"
+        )  # pylint: disable=W1203
+        interrupted = False
+
         """
         logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
         interrupted = False
@@ -69,20 +75,22 @@ class AudioPlayer:
         logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
         completed = True
 
+
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
-            temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
+            temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix=".mp3")
             os.close(temp_audio_file[0])
 
             audio_obj.save(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
-                cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
+                cmd = ["ffplay", "-nodisp", "-autoexit", "-loglevel", "quiet"]
                 if rate and rate != 1.0:
-                    cmd += ['-af', f'atempo={rate}']
+                    cmd += ["-af", f"atempo={rate}"]
                 cmd.append(temp_audio_file[1])
                 self.current_process = subprocess.Popen(
-                    cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+                )
 
             interrupted = False
             while self.current_process.poll() is None:
@@ -102,12 +110,16 @@ class AudioPlayer:
                     break
                 time.sleep(0.1)
         except Exception as play_ex:
-            logger.error('Error when attempting to play audio.', exc_info=True)
+            logger.error("Error when attempting to play audio.", exc_info=True)
             logger.info(play_ex)
 
             interrupted = True
 
+
+            interrupted = True
+
             completed = False
+
 
         finally:
             os.remove(temp_audio_file[1])
@@ -116,14 +128,15 @@ class AudioPlayer:
         return not interrupted
 
 
+
         return completed
 
+
     def play_audio_loop(self, config: dict):
-        """Continuously play text as audio based on event signaling.
-        """
-        lang = 'english'
+        """Continuously play text as audio based on event signaling."""
+        lang = "english"
         lang_code = self._get_language_code(lang)
-        rate = config.get('General', {}).get('tts_speech_rate', self.speech_rate)
+        rate = config.get("General", {}).get("tts_speech_rate", self.speech_rate)
         self.speech_rate = rate
 
         while self.stop_loop is False:
@@ -148,11 +161,18 @@ class AudioPlayer:
                     sp_rec.enabled = False
                     try:
 
+                        completed = self.play_audio(
+                            speech=new_text, lang=lang_code, rate=rate
+                        )
+                        if completed:
+
+
                         completed = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                         if completed:
 
                         played = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                         if played:
+
 
                             gv.last_spoken_response += new_text
                     finally:
@@ -167,7 +187,7 @@ class AudioPlayer:
                 speech = self._get_speech_text()
                 final_speech = self._process_speech_text(speech)
 
-                new_lang = config.get('OpenAI', {}).get('response_lang', lang)
+                new_lang = config.get("OpenAI", {}).get("response_lang", lang)
                 if new_lang != lang:
                     lang_code = self._get_language_code(new_lang)
                     lang = new_lang
@@ -188,6 +208,20 @@ class AudioPlayer:
                         new_text = final_speech[start:]
                         if new_text:
                             self.speech_text_available.clear()
+
+                            completed = self.play_audio(
+                                speech=new_text, lang=lang_code, rate=rate
+                            )
+                            if completed:
+                                gv.last_spoken_response += new_text
+                    else:
+                        self.speech_text_available.clear()
+                        completed = self.play_audio(
+                            speech=final_speech, lang=lang_code, rate=rate
+                        )
+                        if completed:
+                            gv.last_spoken_response = final_speech
+
 
                             completed = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                             if completed:
@@ -216,6 +250,7 @@ class AudioPlayer:
                             gv.last_spoken_response = final_speech
 
 
+
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
@@ -232,22 +267,21 @@ class AudioPlayer:
             time.sleep(0.1)
 
     def _get_language_code(self, lang: str) -> str:
-        """Get the language code from the configuration.
-        """
+        """Get the language code from the configuration."""
         try:
             return next(key for key, value in LANGUAGES_DICT.items() if value == lang)
         except StopIteration:
             # Return dafault lang if nothing else is found
-            return 'en'
+            return "en"
 
     def _get_speech_text(self) -> str:
-        """Get the speech text from the conversation.
-        """
-        return self.conversation.get_conversation(sources=[constants.PERSONA_ASSISTANT], length=1)
+        """Get the speech text from the conversation."""
+        return self.conversation.get_conversation(
+            sources=[constants.PERSONA_ASSISTANT], length=1
+        )
 
     def _process_speech_text(self, speech: str) -> str:
-        """Process the speech text to remove persona and formatting.
-        """
+        """Process the speech text to remove persona and formatting."""
         persona_length = len(constants.PERSONA_ASSISTANT) + 2
         final_speech = speech[persona_length:].strip()
         return final_speech[1:-1]  # Remove square brackets
