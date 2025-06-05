@@ -84,6 +84,43 @@ class TestAudioPlayer(unittest.TestCase):
         mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5)
         self.audio_player.stop_loop = True
 
+    @patch.object(AudioPlayer, 'play_audio')
+    def test_real_time_streaming(self, mock_play_audio):
+        """Verify incremental playback for streaming responses."""
+        gv = self.convo.context
+        gv.real_time_read = True
+        gv.responder = MagicMock()
+        gv.responder.streaming_complete.is_set.side_effect = [False, True]
+
+        self.convo.get_conversation.side_effect = [
+            f"{const.PERSONA_ASSISTANT}: [Hello]",
+            f"{const.PERSONA_ASSISTANT}: [Hello world]",
+        ]
+
+        self.audio_player.speech_text_available.set()
+        self.audio_player.read_response = True
+
+        def side_effect(*args, **kwargs):
+            if mock_play_audio.call_count == 1:
+                self.audio_player.speech_text_available.set()
+            else:
+                self.audio_player.stop_loop = True
+            return True
+
+        mock_play_audio.side_effect = side_effect
+
+        thread = threading.Thread(target=self.audio_player.play_audio_loop, args=(self.config,))
+        thread.start()
+        time.sleep(1)
+
+        self.audio_player.stop_loop = True
+        thread.join(timeout=1)
+
+        self.assertEqual(mock_play_audio.call_count, 2)
+        self.assertEqual(mock_play_audio.call_args_list[0].kwargs["speech"], "Hello")
+        self.assertEqual(mock_play_audio.call_args_list[1].kwargs["speech"], " world")
+        self.assertEqual(gv.last_spoken_response, "Hello world")
+
     def test_get_language_code(self):
         """
         Test the _get_language_code method.

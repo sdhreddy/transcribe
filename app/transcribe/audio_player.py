@@ -124,9 +124,8 @@ class AudioPlayer:
                     prev_sp_state = sp_rec.enabled
                     sp_rec.enabled = False
                     try:
-                        played = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
-                        if played:
-                            gv.last_spoken_response += new_text
+                        gv.last_spoken_response += new_text
+                        self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                     finally:
                         time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                         sp_rec.enabled = prev_sp_state
@@ -160,14 +159,12 @@ class AudioPlayer:
                         new_text = final_speech[start:]
                         if new_text:
                             self.speech_text_available.clear()
-                            played = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
-                            if played:
-                                gv.last_spoken_response += new_text
+                            gv.last_spoken_response += new_text
+                            self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                     else:
                         self.speech_text_available.clear()
-                        played = self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
-                        if played:
-                            gv.last_spoken_response = final_speech
+                        gv.last_spoken_response = final_speech
+                        self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
