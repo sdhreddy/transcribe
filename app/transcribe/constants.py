@@ -7,7 +7,7 @@ PERSONA_SYSTEM = 'system'
 PERSONA_SPEAKER = 'Speaker'
 
 LOG_NAME = 'Transcribe'
-MAX_TRANSCRIPTION_PHRASES_FOR_LLM = 100
+MAX_TRANSCRIPTION_PHRASES_FOR_LLM = 200
 TRANSCRIPT_UI_UPDATE_DELAY_DURATION_MS = 500
 
 # Delay before re-enabling speaker capture after TTS playback stops
