@@ -262,8 +262,11 @@ class GPTResponder:
 
     def generate_response_for_selected_text(self, text: str):
         """Ping LLM to get a suggested response right away.
-            Gets a response even if the continuous suggestion option is disabled.
-            Updates the conversation object with the response from LLM.
+
+        This method mirrors ``generate_response_from_transcript_no_check`` but
+        accepts explicit text from the UI.  It supports streaming playback when
+        ``continuous_read`` and ``real_time_read`` are enabled by delegating to
+        ``_get_llm_response``.
         """
         try:
             logger.info(GPTResponder.generate_response_for_selected_text.__name__)
@@ -276,33 +279,8 @@ class GPTResponder:
             if not utilities.is_api_key_valid(api_key=api_key, base_url=base_url, model=model):
                 return None
 
-            with duration.Duration(name='OpenAI Chat Completion Selected', screen=False):
-                self.streaming_complete.clear()
-                prompt = prompts.create_prompt_for_text(text=text, config=self.config)
-                llm_response = self.llm_client.chat.completions.create(
-                    model=self.model,
-                    messages=prompt,
-                    temperature=temperature,
-                    timeout=timeout,
-                    stream=True
-                )
-
-                # Update conversation with an empty response. This response will be updated
-                # by subsequent updates from the streaming response
-                self._update_conversation(persona=constants.PERSONA_ASSISTANT,
-                                          response="  ",
-                                          update_previous=False)
-                collected_messages = ""
-                for chunk in llm_response:
-                    chunk_message = chunk.choices[0].delta  # extract the message
-                    if chunk_message.content:
-                        message_text = chunk_message.content
-                        collected_messages += message_text
-                        # print(f"{message_text}", end="")
-                        self._update_conversation(persona=constants.PERSONA_ASSISTANT,
-                                                  response=collected_messages,
-                                                  update_previous=True)
-                self.streaming_complete.set()
+            prompt = prompts.create_prompt_for_text(text=text, config=self.config)
+            collected_messages = self._get_llm_response(prompt, temperature, timeout)
 
         except Exception as exception:
             print('Error when attempting to get a response from LLM.')
