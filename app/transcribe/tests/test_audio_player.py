@@ -48,7 +48,8 @@ class TestAudioPlayer(unittest.TestCase):
         mock_popen.side_effect = Exception('ffplay missing')
 
         with self.assertLogs(level='ERROR') as log:
-            self.audio_player.play_audio(speech, lang)
+            result = self.audio_player.play_audio(speech, lang)
+            self.assertFalse(result)
             self.assertIn('Error when attempting to play audio.', log.output[0])
 
     @patch.object(AudioPlayer, 'play_audio')
@@ -65,6 +66,7 @@ class TestAudioPlayer(unittest.TestCase):
         def side_effect(*args, **kwargs):
             self.audio_player.read_response = False
             self.audio_player.speech_text_available.clear()
+            return True
 
         mock_play_audio.side_effect = side_effect
         self.audio_player.speech_text_available.set()
