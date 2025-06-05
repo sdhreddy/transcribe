@@ -9,6 +9,7 @@ import tempfile
 import threading
 import subprocess
 import datetime
+import queue
 import gtts
 from conversation import Conversation
 import constants
@@ -31,6 +32,9 @@ class AudioPlayer:
         self.current_process = None
         self.play_lock = threading.Lock()
         self.speech_rate = constants.DEFAULT_TTS_SPEECH_RATE
+        self._tts_queue: queue.Queue[tuple[str, str, float]] = queue.Queue()
+        self._worker = threading.Thread(target=self._tts_worker, daemon=True)
+        self._worker.start()
 
     def stop_current_playback(self):
         """Stop any current audio playback"""
@@ -44,6 +48,18 @@ class AudioPlayer:
                 except Exception:
                     pass
         self.current_process = None
+
+    def _tts_worker(self):
+        """Background worker to synthesize and play queued text."""
+        while not self.stop_loop:
+            try:
+                text, lang_code, rate = self._tts_queue.get(timeout=0.1)
+            except queue.Empty:
+                continue
+            try:
+                self.play_audio(speech=text, lang=lang_code, rate=rate)
+            finally:
+                self._tts_queue.task_done()
 
     def play_audio(self, speech: str, lang: str, rate: float | None = None):
         """Play text as audio.
@@ -111,7 +127,7 @@ class AudioPlayer:
                     prev_sp_state = sp_rec.enabled
                     sp_rec.enabled = False
                     try:
-                        self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                        self._tts_queue.put((new_text, lang_code, rate))
                         gv.last_spoken_response += new_text
                     finally:
                         time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
@@ -147,11 +163,11 @@ class AudioPlayer:
                         new_text = final_speech[start:]
                         if new_text:
                             self.speech_text_available.clear()
-                            self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                            self._tts_queue.put((new_text, lang_code, rate))
                             gv.last_spoken_response += new_text
                     else:
                         self.speech_text_available.clear()
-                        self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                        self._tts_queue.put((final_speech, lang_code, rate))
                         gv.last_spoken_response = final_speech
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
