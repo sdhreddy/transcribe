@@ -10,10 +10,25 @@ import time
 valid_api_key: bool = False
 
 
+def parse_yaml_bool(value) -> bool:
+    """Convert YAML boolean or string representation to ``bool``.
+
+    Accepts values like ``True``, ``False``, ``yes``, ``no`` or ``1``/``0``.
+    Anything unrecognized defaults to ``False``.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "1"}
+    return False
+
+
 def merge(first: dict, second: dict, path=[]):
     """Recursively merge two dictionaries.
-       For keys with different values, values in the second dictionary
-       replace the values with current dictionary
+    For keys with different values, values in the second dictionary
+    replace the values with current dictionary
     """
     if second is None:
         # No values to merge into first dict. Leave first dict unchanged.
@@ -37,8 +52,7 @@ def merge(first: dict, second: dict, path=[]):
 
 
 def delete_files(file_list: list) -> bool:
-    """Delete all files in the list
-    """
+    """Delete all files in the list"""
     if not file_list:
         return True
 
@@ -57,9 +71,10 @@ def incrementing_filename(filename: str, extension: str):
     or text-2.txt if text-1.txt exists
     """
     i = 0
-    while os.path.exists(f'{filename}-{i}.{extension}'):
+    while os.path.exists(f"{filename}-{i}.{extension}"):
         i += 1
-    return f'{filename}-{i}.{extension}'
+    return f"{filename}-{i}.{extension}"
+
 
 # The method naturalize is copied from
 # https://github.com/python-humanize/humanize/blob/main/src/humanize/filesize.py
@@ -146,59 +161,63 @@ def naturalsize(
 
 
 def download_using_bits(file_url: str, file_path: str):
-    """Download a file using the BITS Service on windows
-    """
+    """Download a file using the BITS Service on windows"""
     try:
-        print(f'Downloading file: {file_url}')
-        subprocess.check_output(['powershell',
-                                 '-NoProfile',
-                                 '-ExecutionPolicy',
-                                 'Bypass',
-                                 '-Command',
-                                 'Start-BitsTransfer',
-                                 '-Source',
-                                 file_url,
-                                 '-Destination',
-                                 file_path]).strip()
+        print(f"Downloading file: {file_url}")
+        subprocess.check_output(
+            [
+                "powershell",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-Command",
+                "Start-BitsTransfer",
+                "-Source",
+                file_url,
+                "-Destination",
+                file_path,
+            ]
+        ).strip()
     except subprocess.CalledProcessError:
-        print(f'Failed to download the file: {file_url}')
+        print(f"Failed to download the file: {file_url}")
     except FileNotFoundError:
-        print('Please install Powershell or ensure it is in path.')
-        print('Powershell is required to download models and install ffmpeg')
+        print("Please install Powershell or ensure it is in path.")
+        print("Powershell is required to download models and install ffmpeg")
 
 
 def zip_files_in_folder_with_params(**params):
     """Zip all files in the specified folder.
-    This method is similar to zip_files_in_folder, can be called in 
+    This method is similar to zip_files_in_folder, can be called in
     thread invocations
     """
     try:
-        folder_path = params['folder_path']
-        zip_file_name = params['zip_file_name']
-        skip_zip_files = bool(params['skip_zip_files'])
+        folder_path = params["folder_path"]
+        zip_file_name = params["zip_file_name"]
+        skip_zip_files = bool(params["skip_zip_files"])
     except KeyError as ke:
-        print(f'Caught exception in method: {zip_files_in_folder_with_params}')
-        print(f'Required argument {ke} not set.')
+        print(f"Caught exception in method: {zip_files_in_folder_with_params}")
+        print(f"Required argument {ke} not set.")
 
-    zip_files_in_folder(folder_path=folder_path,
-                        zip_file_name=zip_file_name,
-                        skip_zip_files=skip_zip_files)
+    zip_files_in_folder(
+        folder_path=folder_path,
+        zip_file_name=zip_file_name,
+        skip_zip_files=skip_zip_files,
+    )
 
 
-def zip_files_in_folder(folder_path: str, zip_file_name: str,
-                        skip_zip_files: bool = True):
-    """Zip all files in this folder
-    """
-    with zipfile.ZipFile(f'{zip_file_name}', 'w') as my_zip:
+def zip_files_in_folder(
+    folder_path: str, zip_file_name: str, skip_zip_files: bool = True
+):
+    """Zip all files in this folder"""
+    with zipfile.ZipFile(f"{zip_file_name}", "w") as my_zip:
         for file in os.listdir(folder_path):
             if skip_zip_files and file.endswith(".zip"):
                 continue
-            my_zip.write(f'{folder_path}/{file}')
+            my_zip.write(f"{folder_path}/{file}")
 
 
 def get_available_models(client: openai.OpenAI) -> list:
-    """Get the list of available models from the provider.
-    """
+    """Get the list of available models from the provider."""
     try:
         models = client.models.list()
         return_val = []
@@ -212,15 +231,14 @@ def get_available_models(client: openai.OpenAI) -> list:
 
 
 def is_api_key_valid(api_key: str, base_url: str, model: str) -> bool:
-    """Check if it is valid openai compatible openai key for the provider
-    """
+    """Check if it is valid openai compatible openai key for the provider"""
 
     global valid_api_key  # pylint: disable=W0603
 
     if valid_api_key:
         return True
 
-    if api_key == 'API_KEY':  # This is the default value
+    if api_key == "API_KEY":  # This is the default value
         return False
 
     openai.api_key = api_key
@@ -233,21 +251,21 @@ def is_api_key_valid(api_key: str, base_url: str, model: str) -> bool:
         chat_completion = client.chat.completions.create(
             messages=[
                 {
-                    'role': 'system',
-                    'content': 'You are an AI assistant',
+                    "role": "system",
+                    "content": "You are an AI assistant",
                 },
                 {
-                    'role': 'user',
-                    'content': 'Are you online',
-                }
+                    "role": "user",
+                    "content": "Are you online",
+                },
             ],
             model=model,
             # Openai model 03-mini does not support max_tokens parameter.
             # We do not support this model out of the box.
             # Comment this line to use 03-mini model
-            max_tokens=1024
+            max_tokens=1024,
             # max_completion_tokens=1024
-            )
+        )
         assert len(chat_completion.choices[0].message.content) > 0
         client.close()
     except openai.AuthenticationError as e:
@@ -275,7 +293,7 @@ def ensure_directory_exists(directory_path: str):
     #     print(f"Directory '{directory_path}' already exists.")
 
 
-def get_data_path(app_name, filename=''):
+def get_data_path(app_name, filename=""):
     """
     Get the full path to the data file in the user data directory.
     These files are created inside the Roaming profile.
@@ -287,7 +305,7 @@ def get_data_path(app_name, filename=''):
     Returns:
         str: The full path to the data file.
     """
-    data_dir = user_data_dir(app_name, appauthor='viveku', roaming=True)
+    data_dir = user_data_dir(app_name, appauthor="viveku", roaming=True)
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
     return os.path.join(data_dir, filename)
