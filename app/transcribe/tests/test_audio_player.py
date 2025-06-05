@@ -48,7 +48,8 @@ class TestAudioPlayer(unittest.TestCase):
         mock_popen.side_effect = Exception('ffplay missing')
 
         with self.assertLogs(level='ERROR') as log:
-            self.audio_player.play_audio(speech, lang)
+            result = self.audio_player.play_audio(speech, lang)
+            self.assertFalse(result)
             self.assertIn('Error when attempting to play audio.', log.output[0])
 
     @patch.object(AudioPlayer, 'play_audio')
@@ -65,6 +66,7 @@ class TestAudioPlayer(unittest.TestCase):
         def side_effect(*args, **kwargs):
             self.audio_player.read_response = False
             self.audio_player.speech_text_available.clear()
+            return True
 
         mock_play_audio.side_effect = side_effect
         self.audio_player.speech_text_available.set()
@@ -77,8 +79,8 @@ class TestAudioPlayer(unittest.TestCase):
 
         self.assertFalse(self.audio_player.speech_text_available.is_set(), 'Threading Event was not cleared.')
         self.assertFalse(self.audio_player.read_response, 'Read response boolean was not cleared.')
-        self.assertEqual(self.convo.context.last_spoken_response, 'initial',
-                         'Last spoken response should remain unchanged after playback.')
+        self.assertEqual(self.convo.context.last_spoken_response, 'Hello, this is a test.',
+                         'Last spoken response should be updated after playback.')
         mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5)
         self.audio_player.stop_loop = True
 
