@@ -93,6 +93,7 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
 
+
         return completed
 
     def play_audio_loop(self, config: dict):
@@ -160,6 +161,14 @@ class AudioPlayer:
                         new_text = final_speech[start:]
                         if new_text:
                             self.speech_text_available.clear()
+
+                            gv.last_spoken_response += new_text
+                            self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                    else:
+                        self.speech_text_available.clear()
+                        gv.last_spoken_response = final_speech
+                        self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+
                             played = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                             if played:
                                 gv.last_spoken_response += new_text
@@ -168,6 +177,7 @@ class AudioPlayer:
                         played = self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                         if played:
                             gv.last_spoken_response = final_speech
+
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
