@@ -132,7 +132,6 @@ class GPTResponder:
             )
 
             collected_messages = ""
-            buffer = ""
             ctx = self.conversation.context
             for chunk in multi_turn_response:
                 chunk_message = chunk.choices[0].delta  # extract the message
@@ -149,17 +148,8 @@ class GPTResponder:
                         and self.enabled
                         and not ctx.update_response_now
                     ):
-                        buffer += message_text
-                        if len(buffer) >= 120 or buffer.endswith(tuple(".!?")):
-                            ctx.audio_player_var.enqueue_chunk(buffer.strip())
-                            buffer = ""
-            if (
-                ctx.continuous_read
-                and self.enabled
-                and not ctx.update_response_now
-                and buffer.strip()
-            ):
-                ctx.audio_player_var.enqueue_chunk(buffer.strip())
+                        ctx.audio_player_var.enqueue_chunk(message_text)
+
             self.streaming_complete.set()
             return collected_messages
 

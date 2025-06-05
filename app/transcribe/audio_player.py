@@ -143,7 +143,7 @@ class AudioPlayer:
                 # can detect when a new response is generated and
                 # avoid replaying the same audio multiple times.
 
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     def _get_language_code(self, lang: str) -> str:
         """Get the language code from the configuration."""

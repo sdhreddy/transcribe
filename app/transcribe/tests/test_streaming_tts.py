@@ -40,13 +40,13 @@ class TestStreamingTTS(unittest.TestCase):
         self.responder.llm_client = MagicMock()
         self.responder.model = "gpt"
 
-    def test_enqueue_grouped_chunks_when_streaming(self):
+    def test_enqueue_chunks_when_streaming(self):
         stream = [FakeChunk("Hello "), FakeChunk("world! How "), FakeChunk("are you?")]
         self.responder.llm_client.chat.completions.create.return_value = stream
         result = self.responder._get_llm_response([], 0.5, 30)
         self.assertEqual(result, "Hello world! How are you?")
-        self.context.audio_player_var.enqueue_chunk.assert_called_once_with(
-            "Hello world! How are you?"
+        self.context.audio_player_var.enqueue_chunk.assert_has_calls(
+            [call("Hello "), call("world! How "), call("are you?")]
         )
 
     def test_no_enqueue_when_manual(self):
@@ -84,8 +84,8 @@ class TestStreamingTTS(unittest.TestCase):
         self.responder.llm_client.chat.completions.create.return_value = stream
         self.context.audio_player_var.enqueue_chunk.reset_mock()
         self.responder._get_llm_response([], 0.5, 30)
-        self.context.audio_player_var.enqueue_chunk.assert_called_once_with(
-            "Hello world!"
+        self.context.audio_player_var.enqueue_chunk.assert_has_calls(
+            [call("Hello "), call("world!")]
         )
 
 
