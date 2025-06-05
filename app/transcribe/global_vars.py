@@ -1,20 +1,20 @@
-"""Global context for the application
-"""
+"""Global context for the application"""
+
 import sys
 import os
 import queue
 import datetime
 from audio_transcriber import AudioTranscriber
 import audio_player
-sys.path.append('../..')
+
+sys.path.append("../..")
 import conversation  # noqa: E402 pylint: disable=C0413
 from sdk import audio_recorder as ar  # noqa: E402 pylint: disable=C0413
 from tsutils import Singleton, task_queue, utilities  # noqa: E402 pylint: disable=C0413
 
 
 class TranscriptionGlobals(Singleton.Singleton):
-    """Global constants for audio processing. It is implemented as a Singleton class.
-    """
+    """Global constants for audio processing. It is implemented as a Singleton class."""
 
     audio_queue: queue.Queue = None
     user_audio_recorder: ar.MicRecorder = None
@@ -59,13 +59,15 @@ class TranscriptionGlobals(Singleton.Singleton):
         self.convo = conversation.Conversation(self)
         self.start = datetime.datetime.now()
         self.task_worker = task_queue.TaskQueue()
-        self.data_dir = utilities.get_data_path(app_name='Transcribe')
-        zip_file_name = utilities.incrementing_filename(filename=f'{self.data_dir}/logs/transcript', extension='zip')
+        self.data_dir = utilities.get_data_path(app_name="Transcribe")
+        zip_file_name = utilities.incrementing_filename(
+            filename=f"{self.data_dir}/logs/transcript", extension="zip"
+        )
         zip_params = {
-            'task_type': task_queue.TaskQueueEnum.ZIP_TASK,
-            'folder_path': f'{self.data_dir}/logs',
-            'zip_file_name': zip_file_name,
-            'skip_zip_files': True
+            "task_type": task_queue.TaskQueueEnum.ZIP_TASK,
+            "folder_path": f"{self.data_dir}/logs",
+            "zip_file_name": zip_file_name,
+            "skip_zip_files": True,
         }
         self.task_worker.add(**zip_params)
         self.current_working_dir = os.path.dirname(os.path.realpath(__file__))
@@ -73,14 +75,15 @@ class TranscriptionGlobals(Singleton.Singleton):
         # Ensure that vscode.env file is being read correctly
         # print(f'Env var is: {os.getenv("test_environment_variable")}')
         # Ensure log folder exists
-        utilities.ensure_directory_exists(f'{self.data_dir}/logs')
-        db_log_file = utilities.incrementing_filename(filename=f'{self.data_dir}logs/db',
-                                                      extension='log')
-        self.db_file_path = self.data_dir + 'logs/app.db'
+        utilities.ensure_directory_exists(f"{self.data_dir}/logs")
+        db_log_file = utilities.incrementing_filename(
+            filename=f"{self.data_dir}logs/db", extension="log"
+        )
+        self.db_file_path = self.data_dir + "logs/app.db"
         self.db_context = {}
-        self.db_context['db_file_path'] = self.db_file_path
-        self.db_context['current_working_dir'] = self.current_working_dir
-        self.db_context['db_log_file'] = db_log_file
+        self.db_context["db_file_path"] = self.db_file_path
+        self.db_context["current_working_dir"] = self.current_working_dir
+        self.db_context["db_log_file"] = db_log_file
         self.continuous_read = False
         self.last_tts_response = ""
         self.last_spoken_response = ""
@@ -88,38 +91,58 @@ class TranscriptionGlobals(Singleton.Singleton):
         self._initialized = True
 
     def set_transcriber(self, transcriber):
-        """Set Transcriber to be used across the application.
-        """
+        """Set Transcriber to be used across the application."""
         self.transcriber = transcriber
 
     def initiate_audio_devices(self, config: dict):
-        """Initialize the necessary audio devices
-        """
+        """Initialize the necessary audio devices"""
         # Handle mic if it is not disabled in arguments or yaml file
-        print('[INFO] Using default microphone.')
-        data_dir = utilities.get_data_path(app_name='Transcribe')
-        self.user_audio_recorder = ar.MicRecorder(audio_file_name=f'{data_dir}/logs/mic.wav')
-        if not config['General']['disable_mic'] and config['General']['mic_device_index'] != -1:
-            print('[INFO] Override default microphone with device specified in parameters file.')
-            self.user_audio_recorder.set_device(index=int(config['General']['mic_device_index']))
+        print("[INFO] Using default microphone.")
+        data_dir = utilities.get_data_path(app_name="Transcribe")
+        self.user_audio_recorder = ar.MicRecorder(
+            audio_file_name=f"{data_dir}/logs/mic.wav"
+        )
+        if (
+            not config["General"]["disable_mic"]
+            and config["General"]["mic_device_index"] != -1
+        ):
+            print(
+                "[INFO] Override default microphone with device specified in parameters file."
+            )
+            self.user_audio_recorder.set_device(
+                index=int(config["General"]["mic_device_index"])
+            )
 
         # Handle speaker if it is not disabled in arguments or yaml file
-        print('[INFO] Using default speaker.')
-        self.speaker_audio_recorder = ar.SpeakerRecorder(audio_file_name=f'{data_dir}/logs/speaker.wav')
-        if not config['General']['disable_speaker'] and config['General']['speaker_device_index'] != -1:
-            print('[INFO] Override default speaker with device specified in parameters file.')
-            self.speaker_audio_recorder.set_device(index=int(
-                config['General']['speaker_device_index']))
+        print("[INFO] Using default speaker.")
+        self.speaker_audio_recorder = ar.SpeakerRecorder(
+            audio_file_name=f"{data_dir}/logs/speaker.wav"
+        )
+        if (
+            not config["General"]["disable_speaker"]
+            and config["General"]["speaker_device_index"] != -1
+        ):
+            print(
+                "[INFO] Override default speaker with device specified in parameters file."
+            )
+            self.speaker_audio_recorder.set_device(
+                index=int(config["General"]["speaker_device_index"])
+            )
 
     def set_read_response(self, value: bool):
-        """Signal that the response will be read aloud
-        """
+        """Signal that the response will be read aloud"""
         self.read_response = value
         self.audio_player_var.read_response = value
+        if not value and self.audio_player_var:
+            self.audio_player_var.stop_current_playback()
+            self.audio_player_var.clear_queue()
 
     def set_continuous_read(self, value: bool):
         """Toggle continuous read aloud of responses"""
         self.continuous_read = value
+        if not value and self.audio_player_var:
+            self.audio_player_var.stop_current_playback()
+            self.audio_player_var.clear_queue()
 
 
 # Instantiate a single copy of globals here itself
