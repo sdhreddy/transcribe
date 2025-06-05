@@ -69,6 +69,9 @@ class AudioPlayer:
         logger.info(
             f"{self.__class__.__name__} - Playing audio"
         )  # pylint: disable=W1203
+        sp_rec = self.conversation.context.speaker_audio_recorder
+        prev_sp_state = sp_rec.enabled
+        sp_rec.enabled = False
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix=".mp3")
@@ -97,6 +100,10 @@ class AudioPlayer:
             os.remove(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
+            time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
+            sp_rec.enabled = prev_sp_state
+            gv = self.conversation.context
+            gv.last_playback_end = datetime.datetime.utcnow()
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling."""
@@ -113,16 +120,7 @@ class AudioPlayer:
                     lang_code = self._get_language_code(new_lang)
                     lang = new_lang
 
-                sp_rec = self.conversation.context.speaker_audio_recorder
-                prev_sp_state = sp_rec.enabled
-                sp_rec.enabled = False
-                try:
-                    self.play_audio(speech=chunk, lang=lang_code, rate=rate)
-                finally:
-                    time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
-                    sp_rec.enabled = prev_sp_state
-                    gv = self.conversation.context
-                    gv.last_playback_end = datetime.datetime.utcnow()
+                self.play_audio(speech=chunk, lang=lang_code, rate=rate)
 
             if self.speech_text_available.is_set() and self.read_response:
                 self.speech_text_available.clear()
@@ -135,27 +133,15 @@ class AudioPlayer:
                     lang = new_lang
 
                 self.read_response = False
-                # Disable audio capture to avoid echo
-                sp_rec = self.conversation.context.speaker_audio_recorder
-                # Only disable speaker capture so user mic remains active and
-                # playback can be interrupted by new speech.
-                prev_sp_state = sp_rec.enabled
-                sp_rec.enabled = False
-                try:
-                    self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
-                finally:
-                    time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
-                    sp_rec.enabled = prev_sp_state
-                    gv = self.conversation.context
-                    gv.last_playback_end = datetime.datetime.utcnow()
+                self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
 
-                    # Reset last_spoken_response so any queued text is cleared
-                    # after playback completes. update_response_ui will
-                    # populate this again when a new response arrives.
+                # Reset last_spoken_response so any queued text is cleared
+                # after playback completes. update_response_ui will
+                # populate this again when a new response arrives.
 
-                    # Keep last_spoken_response so update_response_ui
-                    # can detect when a new response is generated and
-                    # avoid replaying the same audio multiple times.
+                # Keep last_spoken_response so update_response_ui
+                # can detect when a new response is generated and
+                # avoid replaying the same audio multiple times.
 
             time.sleep(0.1)
 

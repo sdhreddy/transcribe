@@ -1,5 +1,5 @@
 import unittest
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, call
 
 import sys
 import os
@@ -40,16 +40,14 @@ class TestStreamingTTS(unittest.TestCase):
         self.responder.llm_client = MagicMock()
         self.responder.model = "gpt"
 
-    def test_enqueue_chunks_when_streaming(self):
-        stream = [FakeChunk("Hello "), FakeChunk("world!")]
+    def test_enqueue_grouped_chunks_when_streaming(self):
+        stream = [FakeChunk("Hello "), FakeChunk("world! How "), FakeChunk("are you?")]
         self.responder.llm_client.chat.completions.create.return_value = stream
         result = self.responder._get_llm_response([], 0.5, 30)
-        self.assertEqual(result, "Hello world!")
-        calls = [
-            call.args[0]
-            for call in self.context.audio_player_var.enqueue_chunk.call_args_list
-        ]
-        self.assertEqual(calls, ["Hello ", "world!"])
+        self.assertEqual(result, "Hello world! How are you?")
+        self.context.audio_player_var.enqueue_chunk.assert_called_once_with(
+            "Hello world! How are you?"
+        )
 
     def test_no_enqueue_when_manual(self):
         self.context.update_response_now = True
@@ -58,6 +56,37 @@ class TestStreamingTTS(unittest.TestCase):
         self.context.audio_player_var.enqueue_chunk.reset_mock()
         self.responder._get_llm_response([], 0.5, 30)
         self.assertFalse(self.context.audio_player_var.enqueue_chunk.called)
+
+    def test_mode_a_no_audio(self):
+        self.context.continuous_read = False
+        self.context.update_response_now = True
+        self.responder.enabled = False
+        stream = [FakeChunk("Hi"), FakeChunk(" there")]
+        self.responder.llm_client.chat.completions.create.return_value = stream
+        self.responder._get_llm_response([], 0.5, 30)
+        self.assertFalse(self.context.audio_player_var.enqueue_chunk.called)
+
+    def test_mode_c_src_on_read_off(self):
+        self.context.continuous_read = False
+        self.context.update_response_now = False
+        self.responder.enabled = True
+        stream = [FakeChunk("Hello"), FakeChunk(" world")]
+        self.responder.llm_client.chat.completions.create.return_value = stream
+        self.context.audio_player_var.enqueue_chunk.reset_mock()
+        self.responder._get_llm_response([], 0.5, 30)
+        self.assertFalse(self.context.audio_player_var.enqueue_chunk.called)
+
+    def test_mode_d_src_on_rrc_on(self):
+        self.context.continuous_read = True
+        self.context.update_response_now = False
+        self.responder.enabled = True
+        stream = [FakeChunk("Hello "), FakeChunk("world!")]
+        self.responder.llm_client.chat.completions.create.return_value = stream
+        self.context.audio_player_var.enqueue_chunk.reset_mock()
+        self.responder._get_llm_response([], 0.5, 30)
+        self.context.audio_player_var.enqueue_chunk.assert_called_once_with(
+            "Hello world!"
+        )
 
 
 if __name__ == "__main__":
