@@ -49,6 +49,9 @@ class TestAudioPlayer(unittest.TestCase):
 
         with self.assertLogs(level='ERROR') as log:
             result = self.audio_player.play_audio(speech, lang)
+
+            self.assertFalse(result)
+
             self.assertIn('Error when attempting to play audio.', log.output[0])
         self.assertFalse(result)
 
@@ -120,6 +123,7 @@ class TestAudioPlayer(unittest.TestCase):
                 self.audio_player.speech_text_available.set()
             else:
                 self.audio_player.stop_loop = True
+
             return True
 
         mock_play_audio.side_effect = side_effect
