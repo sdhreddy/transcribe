@@ -48,6 +48,16 @@ class AudioPlayer:
         self.current_process = None
 
     def play_audio(self, speech: str, lang: str, rate: float | None = None) -> bool:
+
+        """Play text as audio and return ``True`` when playback finishes.
+
+        If ``speech_text_available`` is set while audio is playing, playback is
+        interrupted and ``False`` is returned so the caller can retry with the
+        latest text.
+        """
+        logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        interrupted = False
+
         """Play text as audio.
 
         This is a blocking method and will return when audio playback is complete.
@@ -58,6 +68,7 @@ class AudioPlayer:
         """
         logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
         completed = True
+
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
@@ -73,7 +84,13 @@ class AudioPlayer:
                 self.current_process = subprocess.Popen(
                     cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+            interrupted = False
             while self.current_process.poll() is None:
+                # Interrupt playback if new streaming text becomes available
+                if self.speech_text_available.is_set():
+                    self.stop_current_playback()
+                    interrupted = True
+                    break
                 if not self.conversation.context.audio_queue.empty():
                     completed = False
                     self.stop_current_playback()
@@ -87,11 +104,16 @@ class AudioPlayer:
         except Exception as play_ex:
             logger.error('Error when attempting to play audio.', exc_info=True)
             logger.info(play_ex)
+
+            interrupted = True
+
             completed = False
+
         finally:
             os.remove(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
+        return not interrupted
 
 
         return completed
@@ -125,8 +147,13 @@ class AudioPlayer:
                     prev_sp_state = sp_rec.enabled
                     sp_rec.enabled = False
                     try:
+
+                        completed = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                        if completed:
+
                         played = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                         if played:
+
                             gv.last_spoken_response += new_text
                     finally:
                         time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
@@ -162,6 +189,16 @@ class AudioPlayer:
                         if new_text:
                             self.speech_text_available.clear()
 
+                            completed = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                            if completed:
+                                gv.last_spoken_response += new_text
+                    else:
+                        self.speech_text_available.clear()
+                        completed = self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                        if completed:
+                            gv.last_spoken_response = final_speech
+
+
                             gv.last_spoken_response += new_text
                             self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                     else:
@@ -177,6 +214,7 @@ class AudioPlayer:
                         played = self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                         if played:
                             gv.last_spoken_response = final_speech
+
 
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
