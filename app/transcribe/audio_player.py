@@ -48,18 +48,30 @@ class AudioPlayer:
         self.current_process = None
 
     def play_audio(self, speech: str, lang: str, rate: float | None = None) -> bool:
-        """Play text as audio.
+        """Play text as audio and return ``True`` when playback finishes.
 
-        This is a blocking method and will return when audio playback is complete.
-        For large audio text, this could take several minutes.
+        If ``speech_text_available`` is set while audio is playing, playback is
+        interrupted and ``False`` is returned so the caller can retry with the
+        latest text.
+        interrupted = False
 
-        Returns:
-            bool: ``True`` if playback finished without interruption, ``False`` otherwise.
-        """
-        logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
-        completed = True
-        try:
-            audio_obj = gtts.gTTS(speech, lang=lang)
+            interrupted = False
+                # Interrupt playback if new streaming text becomes available
+                if self.speech_text_available.is_set():
+                    self.stop_current_playback()
+                    interrupted = True
+                    break
+            interrupted = True
+        return not interrupted
+                        completed = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                        if completed:
+                            gv.last_spoken_response += new_text
+                            completed = self.play_audio(speech=new_text, lang=lang_code, rate=rate)
+                            if completed:
+                                gv.last_spoken_response += new_text
+                        completed = self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                        if completed:
+                            gv.last_spoken_response = final_speech
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
             os.close(temp_audio_file[0])
 

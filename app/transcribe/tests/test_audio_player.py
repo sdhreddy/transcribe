@@ -49,6 +49,24 @@ class TestAudioPlayer(unittest.TestCase):
 
         with self.assertLogs(level='ERROR') as log:
             result = self.audio_player.play_audio(speech, lang)
+        self.assertFalse(result)
+
+    @patch('gtts.gTTS')
+    @patch('subprocess.Popen')
+    def test_play_audio_interrupts_on_event(self, mock_popen, mock_gtts):
+        """Playback stops early when new text arrives."""
+        proc = MagicMock()
+        proc.poll.side_effect = [None, None]
+        mock_popen.return_value = proc
+        mock_gtts.return_value = MagicMock(spec=gTTS)
+
+        self.audio_player.speech_text_available.set()
+        result = self.audio_player.play_audio("Hello", "en")
+
+        self.assertFalse(result)
+        proc.terminate.assert_called()
+            return True
+            return True
             self.assertFalse(result)
             self.assertIn('Error when attempting to play audio.', log.output[0])
 
