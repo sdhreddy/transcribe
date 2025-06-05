@@ -72,6 +72,7 @@ def initiate_app_threads(global_vars: TranscriptionGlobals, config: dict):
     if global_vars.responder is None:
         print(f"FATAL: Could not create Chat Reponder for {chat}")
         sys.exit(1)
+
     global_vars.responder.enabled = bool(config["General"]["continuous_response"])
     global_vars.set_continuous_read(
         utilities.parse_yaml_bool(config["General"].get("continuous_read", False))
@@ -79,6 +80,13 @@ def initiate_app_threads(global_vars: TranscriptionGlobals, config: dict):
     global_vars.set_real_time_read(
         utilities.parse_yaml_bool(config["General"].get("real_time_read", False))
     )
+
+    global_vars.responder.enabled = bool(config['General']['continuous_response'])
+    global_vars.set_continuous_read(utilities.parse_yaml_bool(
+        config['General'].get('continuous_read', False)))
+    global_vars.set_real_time_read(utilities.parse_yaml_bool(
+        config['General'].get('real_time_read', False)))
+
 
     respond_thread = threading.Thread(
         target=global_vars.responder.respond_to_transcriber,

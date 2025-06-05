@@ -2,12 +2,18 @@ import unittest
 from unittest.mock import patch
 import yaml
 from tsutils.utilities import (
+
     merge,
     incrementing_filename,
     naturalsize,
     download_using_bits,
     ensure_directory_exists,
     parse_yaml_bool,
+
+    merge, incrementing_filename, naturalsize,
+    download_using_bits, ensure_directory_exists,
+    parse_yaml_bool
+
 )
 
 
@@ -76,6 +82,26 @@ class TestFunctions(unittest.TestCase):
         self.assertIsInstance(data["General"]["continuous_read"], bool)
         self.assertIsInstance(data["General"]["real_time_read"], bool)
         self.assertEqual(data["General"]["llm_response_interval"], 0.5)
+
+    def test_parse_yaml_bool(self):
+        self.assertTrue(parse_yaml_bool('Yes'))
+        self.assertTrue(parse_yaml_bool('true'))
+        self.assertFalse(parse_yaml_bool('No'))
+        self.assertFalse(parse_yaml_bool('false'))
+        self.assertTrue(parse_yaml_bool(True))
+        self.assertFalse(parse_yaml_bool(False))
+
+    def test_yaml_boolean_types(self):
+        yaml_content = """
+        General:
+          continuous_read: true
+          real_time_read: true
+          llm_response_interval: 0.5
+        """
+        data = yaml.safe_load(yaml_content)
+        self.assertIsInstance(data['General']['continuous_read'], bool)
+        self.assertIsInstance(data['General']['real_time_read'], bool)
+        self.assertEqual(data['General']['llm_response_interval'], 0.5)
 
 
 if __name__ == "__main__":
