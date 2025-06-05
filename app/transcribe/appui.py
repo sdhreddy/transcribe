@@ -543,15 +543,21 @@ class AppUI(ctk.CTk):
         """Respond to start / stop of seeking responses from openAI API"""
         logger.info(AppUI.freeze_unfreeze.__name__)
         try:
-            # Invert the state
-            self.global_vars.responder.enabled = not self.global_vars.responder.enabled
+            # Invert the state and persist in configuration
+            new_state = not self.global_vars.responder.enabled
+            self.global_vars.responder.enabled = new_state
+
+            config_obj = configuration.Config()
+            altered_config = {"General": {"continuous_response": bool(new_state)}}
+            config_obj.add_override_value(altered_config)
+
             self.capture_action(
-                f'{"Enabled " if self.global_vars.responder.enabled else "Disabled "} continuous LLM responses'
+                f'{"Enabled " if new_state else "Disabled "} continuous LLM responses'
             )
             self.continuous_response_button.configure(
                 text=(
                     "Suggest Responses Continuously"
-                    if not self.global_vars.responder.enabled
+                    if not new_state
                     else "Do Not Suggest Responses Continuously"
                 )
             )
@@ -677,7 +683,6 @@ class AppUI(ctk.CTk):
 
                 # Allow AudioPlayer to speak the entire response when triggered
                 self.global_vars.last_spoken_response = ""
-
 
             self.response_textbox.configure(state="normal")
             if response_string:
