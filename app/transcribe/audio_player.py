@@ -49,6 +49,7 @@ class AudioPlayer:
 
     def play_audio(self, speech: str, lang: str, rate: float | None = None):
         """Play text as audio.
+
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
         """
@@ -81,6 +82,7 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
 
+
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
         """
@@ -105,6 +107,7 @@ class AudioPlayer:
                 new_text = final_speech[start:]
 
                 if new_text:
+                    self.speech_text_available.clear()
                     sp_rec = gv.speaker_audio_recorder
                     prev_sp_state = sp_rec.enabled
                     sp_rec.enabled = False
@@ -143,9 +146,12 @@ class AudioPlayer:
                             start = len(gv.last_spoken_response)
                         new_text = final_speech[start:]
                         if new_text:
+                            self.speech_text_available.clear()
                             gv.last_spoken_response += new_text
                             self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                     else:
+                        self.speech_text_available.clear()
+                        gv.last_spoken_response = final_speech
                         self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
