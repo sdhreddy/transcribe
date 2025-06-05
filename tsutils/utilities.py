@@ -10,6 +10,21 @@ import time
 valid_api_key: bool = False
 
 
+def parse_yaml_bool(value) -> bool:
+    """Convert YAML boolean or string representation to ``bool``.
+
+    Accepts values like ``True``, ``False``, ``yes``, ``no`` or ``1``/``0``.
+    Anything unrecognized defaults to ``False``.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return bool(value)
+    if isinstance(value, str):
+        return value.strip().lower() in {"true", "yes", "1"}
+    return False
+
+
 def merge(first: dict, second: dict, path=[]):
     """Recursively merge two dictionaries.
        For keys with different values, values in the second dictionary
