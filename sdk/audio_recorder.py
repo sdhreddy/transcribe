@@ -6,7 +6,7 @@ import wave
 from datetime import datetime
 from abc import abstractmethod
 
-import pyaudiowpatch as pyaudio
+import pyaudio
 import custom_speech_recognition as sr
 from tsutils import app_logging as al
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
