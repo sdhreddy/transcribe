@@ -9,7 +9,6 @@ import tempfile
 import threading
 import subprocess
 import datetime
-import playsound
 import gtts
 from conversation import Conversation
 import constants

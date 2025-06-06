@@ -40,7 +40,7 @@ class TestAudioPlayer(unittest.TestCase):
         """
         Test the play_audio method when an exception occurs.
 
-        Verifies that the method handles the playsound exception correctly and logs the error.
+        Verifies that the method handles the playback exception correctly and logs the error.
         """
         speech = "Hello, this is a test."
         lang = 'en'
