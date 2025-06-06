@@ -12,7 +12,7 @@ from abc import abstractmethod
 # import pprint
 import wave
 import tempfile
-import pyaudiowpatch as pyaudio
+import pyaudio
 from difflib import SequenceMatcher
 # from db import AppDB as appdb
 import conversation  # noqa: E402 pylint: disable=C0413

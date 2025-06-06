@@ -229,9 +229,13 @@ class SelectableText(ctk.CTkFrame):
         """Delete last 2 rows of text
         """
         self.text_widget.configure(state="normal")
-        last_index = self.text_widget.index("end-1c linestart")
-        second_last_index = self.text_widget.index(f"{last_index} -1 lines")
-        self.text_widget.delete(second_last_index, "end-1c")
+        content_lines = self.text_widget.get("1.0", "end").splitlines()
+        if len(content_lines) <= 2:
+            self.text_widget.delete("1.0", "end")
+        else:
+            remaining = "\n".join(content_lines[:-2])
+            self.text_widget.delete("1.0", "end")
+            self.text_widget.insert("1.0", remaining + "\n")
         self.text_widget.configure(state="disabled")
 
     def get_text_last_3_rows(self) -> str:
