@@ -2,11 +2,9 @@ import unittest
 import datetime
 import sys
 import os
-from types import ModuleType
 from unittest.mock import MagicMock
 
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-sys.modules['pyaudiowpatch'] = ModuleType('pyaudiowpatch')
 
 from app.transcribe.audio_transcriber import AudioTranscriber
 import app.transcribe.constants as const
