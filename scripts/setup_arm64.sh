@@ -18,7 +18,9 @@ pip install --upgrade pip setuptools wheel
 echo "=== Install Python dependencies ==="
 pip install --upgrade -r requirements.txt
 
+
 echo "=== Install testing dependencies ==="
 pip install --upgrade pytest pytest-cov pytest-mock
+
 
 echo "=== Setup complete! Run 'source venv/bin/activate' to activate your env ==="
