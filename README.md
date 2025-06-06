@@ -245,3 +245,58 @@ Contributions are welcome! Open issues or submit pull requests to improve Transc
 
 ## Acknowledgements
 This project started out as a fork of [ecoute](https://github.com/SevaSk/ecoute/). It has diverged significantly from the original implementation so we decided to remove the link to ecoute.
+
+## ARM64 / Ubuntu Setup
+
+These instructions assume you are on ARM64 hardware (e.g., Surface Pro under WSL2/Ubuntu).
+
+1. **Install system dependencies** (run in a terminal):
+   ```bash
+   sudo apt-get update && sudo apt-get install -y \
+     python3-venv python3-pip python3-tk portaudio19-dev \
+     ffmpeg build-essential libssl-dev libffi-dev \
+     libatlas-base-dev libasound2-dev libportaudio2 \
+     libportaudiocpp0 tk
+   ```
+
+2. **Clone the repo and switch to the ARM64 branch:**
+   ```bash
+   git clone https://github.com/<your-org>/transcribe.git
+   cd transcribe
+   git checkout arm64-support
+   ```
+
+3. **Run the setup script:**
+   ```bash
+   chmod +x scripts/setup_arm64.sh
+   ./scripts/setup_arm64.sh
+   source venv/bin/activate
+   ```
+
+4. **Launch the application:**
+   ```bash
+   python main.py
+   ```
+
+If GUI/Tk errors occur, ensure `python3-tk` is installed.
+
+Dependencies
+
+Python packages: listed in `requirements.txt` (ARM64-compatible only)
+
+System packages: python3-venv, python3-tk, portaudio19-dev, ffmpeg, etc.
+
+## WSL/Ubuntu Audio Setup
+
+If running Transcribe under WSL/Ubuntu with WSLg, audio is forwarded automatically.
+Run the helper script to ensure PulseAudio is available:
+
+1. ```bash
+   chmod +x scripts/setup_wsl_audio.sh
+   ./scripts/setup_wsl_audio.sh
+   ```
+2. Start Transcribe normally:
+   ```bash
+   cd app/transcribe && python main.py
+   ```
+After setup, microphone recording should work inside WSL.
