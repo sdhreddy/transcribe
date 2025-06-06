@@ -2,9 +2,7 @@ import unittest
 from unittest.mock import patch, MagicMock
 import sys
 import os
-from types import ModuleType
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
-sys.modules['pyaudiowpatch'] = ModuleType('pyaudiowpatch')
 from tsutils import configuration
 configuration.Config.__init__ = lambda self, *a, **k: None
 configuration.Config._current_data = {
