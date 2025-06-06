@@ -218,7 +218,7 @@ class AppUI(ctk.CTk):
         self.transcript_text.add_right_menu_separator()
         self.transcript_text.add_right_click_menu(label="Quit", command=self.quit)
 
-        chat_inference_provider = config['General']['chat_inference_provider']
+        chat_inference_provider = config['General'].get('chat_inference_provider', 'openai')
         if chat_inference_provider == 'openai':
             api_key = config['OpenAI']['api_key']
             base_url = config['OpenAI']['base_url']
@@ -848,11 +848,18 @@ def update_response_ui(responder: gr.GPTResponder,
 
     if global_vars_module is None:
         global_vars_module = TranscriptionGlobals()
+    if not hasattr(global_vars_module, 'responder') or global_vars_module.responder is None:
+        from types import SimpleNamespace
+        import threading
+        global_vars_module.responder = SimpleNamespace(enabled=False, streaming_complete=threading.Event())
+    if not hasattr(global_vars_module, 'update_response_now'):
+        global_vars_module.update_response_now = False
     response = None
 
     # global_vars_module.responder.enabled --> This is continous response mode from LLM
     # global_vars_module.update_response_now --> Get Response now from LLM
-    if global_vars_module.responder.enabled or global_vars_module.update_response_now:
+    if (hasattr(global_vars_module, 'responder') and global_vars_module.responder.enabled) \
+       or getattr(global_vars_module, 'update_response_now', False):
         response = responder.response
 
     if global_vars_module.previous_response is not None:
