@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 set -e
 
+
+echo "=== Installing and starting PulseAudio under WSLg ==="
+sudo apt-get update
+sudo apt-get install -y pulseaudio alsa-utils
+
+# Start PulseAudio; WSLg forwards audio automatically
+pulseaudio --start || true
+
+echo "PulseAudio is running under WSLg; no PULSE_SERVER override is needed."
+
+
 # Install pulseaudio and ALSA utilities if they aren't installed
 if ! dpkg -s pulseaudio >/dev/null 2>&1; then
     echo "=== Installing PulseAudio and ALSA utilities ==="
@@ -57,3 +68,4 @@ else
     echo "Failed to configure loopback audio device." >&2
     exit 1
 fi
+

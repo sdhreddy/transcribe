@@ -11,7 +11,10 @@ def in_wsl():
 @unittest.skipUnless(in_wsl(), 'WSL environment required')
 class TestWSLAudioSetup(unittest.TestCase):
 
+    """Tests for PulseAudio availability under WSLg."""
+
     """Tests for WSL audio configuration without snd_aloop."""
+t
 
     def test_pulseaudio_running(self):
         """Ensure PulseAudio daemon is running."""
@@ -28,6 +31,7 @@ class TestWSLAudioSetup(unittest.TestCase):
         sinks = subprocess.check_output(['pactl', 'list', 'sinks']).decode()
         self.assertTrue(len(sources.strip()) > 0)
         self.assertTrue(len(sinks.strip()) > 0)
+
 
 
     """Tests for WSL audio configuration."""

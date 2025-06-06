@@ -287,6 +287,21 @@ Python packages: listed in `requirements.txt` (ARM64-compatible only)
 System packages: python3-venv, python3-tk, portaudio19-dev, ffmpeg, etc.
 
 
+## WSL/Ubuntu Audio Setup
+
+If running Transcribe under WSL/Ubuntu with WSLg, audio is forwarded automatically.
+Run the helper script to ensure PulseAudio is available:
+
+1. ```bash
+   chmod +x scripts/setup_wsl_audio.sh
+   ./scripts/setup_wsl_audio.sh
+   ```
+2. Start Transcribe normally:
+   ```bash
+   cd app/transcribe && python main.py
+   ```
+After setup, microphone recording should work inside WSL.
+
 
 ## WSL/Ubuntu Audio Setup
 
@@ -334,5 +349,6 @@ After setup, microphone recording should work inside WSL.
    ```
 
 After setup, microphone recording should work inside WSL.
+
 
 
