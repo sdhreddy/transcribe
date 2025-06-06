@@ -287,9 +287,11 @@ Python packages: listed in `requirements.txt` (ARM64-compatible only)
 System packages: python3-venv, python3-tk, portaudio19-dev, ffmpeg, etc.
 
 
+
 ## WSL/Ubuntu Audio Setup
 
 If running Transcribe under WSL/Ubuntu, audio capture may fail because no native Linux sound card is present. Use the helper script to connect to a Windows PulseAudio server.
+
 
 
 ## WSL/Ubuntu Audio Setup
@@ -302,6 +304,10 @@ If running Transcribe under WSL/Ubuntu, audio capture may fail because no native
    chmod +x scripts/setup_wsl_audio.sh
    ./scripts/setup_wsl_audio.sh
 
+   ```
+
+
+
 2. Export the PulseAudio server address:
    ```bash
    export PULSE_SERVER=tcp:localhost:4713
@@ -311,6 +317,7 @@ If running Transcribe under WSL/Ubuntu, audio capture may fail because no native
    cd app/transcribe && python main.py
    ```
 After setup, microphone recording should work inside WSL.
+
 
 2. If you use a Windows PulseAudio server, set the server address:
    ```bash

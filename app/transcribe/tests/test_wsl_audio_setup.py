@@ -29,6 +29,7 @@ class TestWSLAudioSetup(unittest.TestCase):
         self.assertTrue(len(sources.strip()) > 0)
         self.assertTrue(len(sinks.strip()) > 0)
 
+
     """Tests for WSL audio configuration."""
 
     def test_loopback_available(self):

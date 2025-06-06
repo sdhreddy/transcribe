@@ -9,6 +9,10 @@ if ! dpkg -s pulseaudio >/dev/null 2>&1; then
 fi
 
 
+
+# WSL's default kernel does not provide the ALSA loopback module (snd_aloop),
+# so we rely solely on PulseAudio to bridge audio between Windows and Linux.
+
 # 'snd_aloop' is not available in the default WSL kernel; skip loading it
 
 # Load ALSA loopback module
@@ -18,15 +22,19 @@ if ! lsmod | grep -q snd_aloop; then
 fi
 
 
+
 # Start PulseAudio
 pulseaudio --check || pulseaudio --start
 sleep 1
+
+
 
 
 # Export PulseAudio server address for Windows interoperability
 export PULSE_SERVER=tcp:localhost:4713
 
 echo "PulseAudio started with server $PULSE_SERVER"
+
 
 # Configure PulseAudio loopback sink and source
 pactl list short modules | grep -q module-alsa-sink || \
@@ -49,4 +57,3 @@ else
     echo "Failed to configure loopback audio device." >&2
     exit 1
 fi
-
