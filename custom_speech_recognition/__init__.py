@@ -139,7 +139,7 @@ class Microphone(AudioSource):
         can't be found or a wrong version is installed
         """
         try:
-            import pyaudiowpatch as pyaudio
+            import pyaudio
         except ImportError:
             raise AttributeError("Could not find PyAudio; check installation")
         from distutils.version import LooseVersion
