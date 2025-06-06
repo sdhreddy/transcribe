@@ -286,6 +286,7 @@ Python packages: listed in `requirements.txt` (ARM64-compatible only)
 
 System packages: python3-venv, python3-tk, portaudio19-dev, ffmpeg, etc.
 
+
 ## WSL/Ubuntu Audio Setup
 
 If running Transcribe under WSL/Ubuntu, audio capture may fail because no native Linux sound card is present. The project includes a helper script to configure a virtual Loopback device using PulseAudio.
@@ -310,3 +311,4 @@ If running Transcribe under WSL/Ubuntu, audio capture may fail because no native
    ```
 
 After setup, microphone recording should work inside WSL.
+
