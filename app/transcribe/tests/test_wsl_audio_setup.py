@@ -10,6 +10,25 @@ def in_wsl():
 
 @unittest.skipUnless(in_wsl(), 'WSL environment required')
 class TestWSLAudioSetup(unittest.TestCase):
+
+    """Tests for WSL audio configuration without snd_aloop."""
+
+    def test_pulseaudio_running(self):
+        """Ensure PulseAudio daemon is running."""
+        if os.environ.get('CI'):
+            self.skipTest('Skip PulseAudio check in CI')
+        result = subprocess.run(['pulseaudio', '--check'])
+        self.assertEqual(result.returncode, 0)
+
+    def test_sources_and_sinks_present(self):
+        """PulseAudio should list at least one source and sink."""
+        if os.environ.get('CI'):
+            self.skipTest('Skip PulseAudio check in CI')
+        sources = subprocess.check_output(['pactl', 'list', 'sources']).decode()
+        sinks = subprocess.check_output(['pactl', 'list', 'sinks']).decode()
+        self.assertTrue(len(sources.strip()) > 0)
+        self.assertTrue(len(sinks.strip()) > 0)
+
     """Tests for WSL audio configuration."""
 
     def test_loopback_available(self):
@@ -30,6 +49,7 @@ class TestWSLAudioSetup(unittest.TestCase):
         subprocess.run(['arecord', '-d', '1', 'test.wav', '-D', 'hw:Loopback,0,0'], check=True)
         subprocess.run(['aplay', '-D', 'hw:Loopback,1,0', 'test.wav'], check=True)
         os.remove('test.wav')
+
 
 
 if __name__ == '__main__':

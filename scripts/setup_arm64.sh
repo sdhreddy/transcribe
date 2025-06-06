@@ -23,7 +23,6 @@ echo "=== Install testing dependencies ==="
 pip install --upgrade pytest pytest-cov pytest-mock
 
 
-
 echo "=== Install testing dependencies ==="
 pip install --upgrade pytest pytest-cov pytest-mock
 
@@ -31,6 +30,12 @@ pip install --upgrade pytest pytest-cov pytest-mock
 
 echo "=== Install testing dependencies ==="
 pip install --upgrade pytest pytest-cov pytest-mock
+
+
+
+echo "=== Install testing dependencies ==="
+pip install --upgrade pytest pytest-cov pytest-mock
+
 
 
 
