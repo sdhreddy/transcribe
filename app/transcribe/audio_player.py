@@ -105,14 +105,16 @@ class AudioPlayer:
 
                 if new_text:
                     sp_rec = gv.speaker_audio_recorder
-                    prev_sp_state = sp_rec.enabled
-                    sp_rec.enabled = False
+                    prev_sp_state = sp_rec.enabled if sp_rec else False
+                    if sp_rec:
+                        sp_rec.enabled = False
                     try:
                         gv.last_spoken_response += new_text
                         self.play_audio(speech=new_text, lang=lang_code, rate=rate)
                     finally:
                         time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
-                        sp_rec.enabled = prev_sp_state
+                        if sp_rec:
+                            sp_rec.enabled = prev_sp_state
                         gv.last_playback_end = datetime.datetime.utcnow()
                 elif gv.responder.streaming_complete.is_set():
                     self.read_response = False
@@ -132,8 +134,9 @@ class AudioPlayer:
                 sp_rec = gv.speaker_audio_recorder
                 # Only disable speaker capture so user mic remains active and
                 # playback can be interrupted by new speech.
-                prev_sp_state = sp_rec.enabled
-                sp_rec.enabled = False
+                prev_sp_state = sp_rec.enabled if sp_rec else False
+                if sp_rec:
+                    sp_rec.enabled = False
                 gv = self.conversation.context
                 try:
                     if gv.real_time_read:
@@ -148,7 +151,8 @@ class AudioPlayer:
                         self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
-                    sp_rec.enabled = prev_sp_state
+                    if sp_rec:
+                        sp_rec.enabled = prev_sp_state
                     gv.last_playback_end = datetime.datetime.utcnow()
 
                     # Reset last_spoken_response so any queued text is cleared

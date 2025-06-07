@@ -169,13 +169,13 @@ def update_audio_devices(global_vars: TranscriptionGlobals, config: dict):
     """Handle all application configuration using the command line args"""
 
     # Handle mic if it is not disabled in arguments or yaml file
-    if not config['General']['disable_mic']:
+    if not config['General']['disable_mic'] and global_vars.user_audio_recorder:
         if config['General']['mic_device_index'] != -1:
             print('[INFO] Override default microphone with device specified in parameters file.')
             global_vars.user_audio_recorder.set_device(index=int(config['General']['mic_device_index']))
 
     # Handle speaker if it is not disabled in arguments or yaml file
-    if not config['General']['disable_speaker']:
+    if not config['General']['disable_speaker'] and global_vars.speaker_audio_recorder:
         if config['General']['speaker_device_index'] != -1:
             print('[INFO] Override default speaker with device specified in parameters file.')
             global_vars.user_audio_recorder.set_device(index=int(config['General']['speaker_device_index']))
