@@ -426,6 +426,16 @@ class WhisperTranscriber(AudioTranscriber):
     Also processes the local application state as it relates to Whisper.
     Does not interact with the Whisper API or Local Whisper SDK.
     """
+    def __init__(self, mic_source, speaker_source, model,
+                 convo: conversation.Conversation, config: dict,
+                 source_name: str):
+        if mic_source is None:
+            raise ValueError(
+                f"Audio source '{source_name}' not found. Please configure a valid microphone source."  # noqa: E501
+            )
+        self.sample_rate = mic_source.SAMPLE_RATE
+        super().__init__(mic_source, speaker_source, model, convo, config)
+
     def check_for_latency(self, results: dict) -> tuple[bool, int, float]:
         """Very long audio clips can result in latency of transcription.
         Prune long audio clips based on number of segments, audio duration.

@@ -177,7 +177,12 @@ def create_transcriber(
             global_vars.speaker_audio_recorder.source if global_vars.speaker_audio_recorder else None,
             model,
             convo=global_vars.convo,
-            config=config)
+            config=config,
+            source_name=(
+                global_vars.user_audio_recorder.source_name
+                if global_vars.user_audio_recorder else "Microphone"
+            )
+        )
     elif name.lower() == 'whisper' and api:
         stt_model_config: dict = {
             'api_key': config['OpenAI']['api_key'],
@@ -192,7 +197,12 @@ def create_transcriber(
             global_vars.speaker_audio_recorder.source if global_vars.speaker_audio_recorder else None,
             model,
             convo=global_vars.convo,
-            config=config)
+            config=config,
+            source_name=(
+                global_vars.user_audio_recorder.source_name
+                if global_vars.user_audio_recorder else "Microphone"
+            )
+        )
     else:
         raise ValueError(f'Unknown transcriber: {name}')
     global_vars.set_transcriber(t)
