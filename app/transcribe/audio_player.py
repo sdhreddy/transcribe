@@ -117,8 +117,18 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
+
+                    current_volume = self.tts_volume
+                    self.play_audio(
+                        speech=final_speech,
+                        lang=lang_code,
+                        rate=rate,
+                        volume=current_volume,
+                    )
+
                     self.play_audio(speech=final_speech, lang=lang_code,
                                    rate=rate, volume=volume)
+
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
