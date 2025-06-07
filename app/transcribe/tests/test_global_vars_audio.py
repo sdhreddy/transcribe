@@ -34,10 +34,11 @@ import pytest
 
 def test_initiate_audio_devices_skips_on_wsl_error(monkeypatch, tmp_path):
     import sdk.audio_recorder as ar
-    # Simulate MicRecorder raising an exception when instantiated
+    # Simulate recorders raising an exception when instantiated
     def _raise(*args, **kwargs):
         raise Exception("no device")
     monkeypatch.setattr(ar, 'MicRecorder', _raise)
+    monkeypatch.setattr(ar, 'SpeakerRecorder', _raise)
     gv = TranscriptionGlobals()
     config = {'General': {'disable_mic': False,
                           'mic_device_index': -1,
