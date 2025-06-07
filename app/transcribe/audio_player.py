@@ -33,6 +33,7 @@ class AudioPlayer:
         self.current_process = None
         self.play_lock = threading.Lock()
         self.speech_rate = constants.DEFAULT_TTS_SPEECH_RATE
+        self.tts_volume = constants.DEFAULT_TTS_VOLUME
 
     def stop_current_playback(self):
         """Stop any current audio playback"""
@@ -47,7 +48,8 @@ class AudioPlayer:
                     pass
         self.current_process = None
 
-    def play_audio(self, speech: str, lang: str, rate: float | None = None):
+    def play_audio(self, speech: str, lang: str, rate: float | None = None,
+                   volume: float | None = None):
         """Play text as audio.
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
@@ -62,8 +64,13 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
+                filters = []
                 if rate and rate != 1.0:
-                    cmd += ['-af', f'atempo={rate}']
+                    filters.append(f'atempo={rate}')
+                if volume is not None and volume != 1.0:
+                    filters.append(f'volume={volume}')
+                if filters:
+                    cmd += ['-af', ','.join(filters)]
                 cmd.append(temp_audio_file[1])
                 self.current_process = subprocess.Popen(
                     cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -88,6 +95,8 @@ class AudioPlayer:
         lang_code = self._get_language_code(lang)
         rate = config.get('General', {}).get('tts_speech_rate', self.speech_rate)
         self.speech_rate = rate
+        volume = config.get('General', {}).get('tts_playback_volume', self.tts_volume)
+        self.tts_volume = volume
 
         while self.stop_loop is False:
             if self.speech_text_available.is_set() and self.read_response:
@@ -108,7 +117,13 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
-                    self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                    current_volume = self.tts_volume
+                    self.play_audio(
+                        speech=final_speech,
+                        lang=lang_code,
+                        rate=rate,
+                        volume=current_volume,
+                    )
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
