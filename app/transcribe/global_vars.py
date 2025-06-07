@@ -19,7 +19,7 @@ class TranscriptionGlobals(Singleton.Singleton):
 
     audio_queue: queue.Queue = None
     user_audio_recorder: ar.MicRecorder = None
-    speaker_audio_recorder: ar.MicRecorder = None
+    speaker_audio_recorder: ar.SpeakerRecorder = None
     audio_player_var: audio_player.AudioPlayer = None
     # Global for transcription from speaker, microphone
     transcriber: AudioTranscriber = None
@@ -115,7 +115,9 @@ class TranscriptionGlobals(Singleton.Singleton):
         # Handle speaker if it is not disabled in arguments or yaml file
         print('[INFO] Using default speaker.')
         try:
-            self.speaker_audio_recorder = ar.MicRecorder(audio_file_name=f'{data_dir}/logs/sp.wav', is_speaker=True)
+            self.speaker_audio_recorder = ar.SpeakerRecorder(
+                audio_file_name=f'{data_dir}/logs/speaker.wav'
+            )
         except Exception as e:
             logger.warning(f"Could not initialize speaker recorder: {e}")
             self.speaker_audio_recorder = None
