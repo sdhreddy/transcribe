@@ -30,8 +30,18 @@ def main():
                           config=config,
                           api=bool(config['General']['use_api']),
                           global_vars=global_vars)
-    global_vars.transcriber.set_source_properties(mic_source=global_vars.user_audio_recorder.source,
-                                                  speaker_source=global_vars.speaker_audio_recorder.source)
+    if global_vars.user_audio_recorder:
+        mic_source = global_vars.user_audio_recorder.source
+    else:
+        mic_source = None
+
+    if global_vars.speaker_audio_recorder:
+        speaker_source = global_vars.speaker_audio_recorder.source
+    else:
+        speaker_source = None
+
+    global_vars.transcriber.set_source_properties(mic_source=mic_source,
+                                                  speaker_source=speaker_source)
 
     # Remove potential temp files from previous invocation
     data_dir = u.get_data_path(app_name='Transcribe')
@@ -44,13 +54,15 @@ def main():
     # Convert raw audio files to real wav file format when program exits
     atexit.register(au.shutdown, global_vars)
 
-    user_stop_func = global_vars.user_audio_recorder.record_audio(global_vars.audio_queue)
-    global_vars.user_audio_recorder.stop_record_func = user_stop_func
+    if global_vars.user_audio_recorder:
+        user_stop_func = global_vars.user_audio_recorder.record_audio(global_vars.audio_queue)
+        global_vars.user_audio_recorder.stop_record_func = user_stop_func
 
     time.sleep(2)
 
-    speaker_stop_func = global_vars.speaker_audio_recorder.record_audio(global_vars.audio_queue)
-    global_vars.speaker_audio_recorder.stop_record_func = speaker_stop_func
+    if global_vars.speaker_audio_recorder:
+        speaker_stop_func = global_vars.speaker_audio_recorder.record_audio(global_vars.audio_queue)
+        global_vars.speaker_audio_recorder.stop_record_func = speaker_stop_func
 
     # Transcriber needs to be created before handling batch tasks which include batch
     # transcription. This order of initialization results in initialization of Mic, Speaker

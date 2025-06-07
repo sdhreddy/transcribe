@@ -144,8 +144,8 @@ def create_transcriber(
             stt_model_config=stt_model_config)
 
         t = DeepgramTranscriber(
-            global_vars.user_audio_recorder.source,
-            global_vars.speaker_audio_recorder.source,
+            global_vars.user_audio_recorder.source if global_vars.user_audio_recorder else None,
+            global_vars.speaker_audio_recorder.source if global_vars.speaker_audio_recorder else None,
             model,
             convo=global_vars.convo,
             config=config)
@@ -158,8 +158,8 @@ def create_transcriber(
             stt_model=tm.STTEnum.WHISPER_CPP,
             stt_model_config=stt_model_config)
         t = WhisperCPPTranscriber(
-            global_vars.user_audio_recorder.source,
-            global_vars.speaker_audio_recorder.source,
+            global_vars.user_audio_recorder.source if global_vars.user_audio_recorder else None,
+            global_vars.speaker_audio_recorder.source if global_vars.speaker_audio_recorder else None,
             model,
             convo=global_vars.convo,
             config=config)
@@ -173,8 +173,8 @@ def create_transcriber(
             stt_model=tm.STTEnum.WHISPER_LOCAL,
             stt_model_config=stt_model_config)
         t = WhisperTranscriber(
-            global_vars.user_audio_recorder.source,
-            global_vars.speaker_audio_recorder.source,
+            global_vars.user_audio_recorder.source if global_vars.user_audio_recorder else None,
+            global_vars.speaker_audio_recorder.source if global_vars.speaker_audio_recorder else None,
             model,
             convo=global_vars.convo,
             config=config)
@@ -188,8 +188,8 @@ def create_transcriber(
             stt_model=tm.STTEnum.WHISPER_API,
             stt_model_config=stt_model_config)
         t = WhisperTranscriber(
-            global_vars.user_audio_recorder.source,
-            global_vars.speaker_audio_recorder.source,
+            global_vars.user_audio_recorder.source if global_vars.user_audio_recorder else None,
+            global_vars.speaker_audio_recorder.source if global_vars.speaker_audio_recorder else None,
             model,
             convo=global_vars.convo,
             config=config)
@@ -212,6 +212,8 @@ def get_language_code(lang: str) -> str:
 def shutdown(global_vars: TranscriptionGlobals):
     """Activities to be performed right before application shutdown.
     """
-    global_vars.user_audio_recorder.write_wav_data_to_file()
-    global_vars.speaker_audio_recorder.write_wav_data_to_file()
+    if global_vars.user_audio_recorder:
+        global_vars.user_audio_recorder.write_wav_data_to_file()
+    if global_vars.speaker_audio_recorder:
+        global_vars.speaker_audio_recorder.write_wav_data_to_file()
     AppDB().shutdown_app()

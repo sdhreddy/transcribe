@@ -9,7 +9,8 @@ import audio_player
 sys.path.append('../..')
 import conversation  # noqa: E402 pylint: disable=C0413
 from sdk import audio_recorder as ar  # noqa: E402 pylint: disable=C0413
-from tsutils import Singleton, task_queue, utilities  # noqa: E402 pylint: disable=C0413
+from tsutils import Singleton, task_queue, utilities, app_logging  # noqa: E402 pylint: disable=C0413
+logger = app_logging.get_logger()
 
 
 class TranscriptionGlobals(Singleton.Singleton):
@@ -18,7 +19,7 @@ class TranscriptionGlobals(Singleton.Singleton):
 
     audio_queue: queue.Queue = None
     user_audio_recorder: ar.MicRecorder = None
-    speaker_audio_recorder: ar.SpeakerRecorder = None
+    speaker_audio_recorder: ar.MicRecorder = None
     audio_player_var: audio_player.AudioPlayer = None
     # Global for transcription from speaker, microphone
     transcriber: AudioTranscriber = None
@@ -101,15 +102,25 @@ class TranscriptionGlobals(Singleton.Singleton):
         # Handle mic if it is not disabled in arguments or yaml file
         print('[INFO] Using default microphone.')
         data_dir = utilities.get_data_path(app_name='Transcribe')
-        self.user_audio_recorder = ar.MicRecorder(audio_file_name=f'{data_dir}/logs/mic.wav')
-        if not config['General']['disable_mic'] and config['General']['mic_device_index'] != -1:
+        try:
+            self.user_audio_recorder = ar.MicRecorder(audio_file_name=f'{data_dir}/logs/mic.wav')
+        except Exception as e:
+            logger.warning(f"Could not initialize user mic recorder: {e}")
+            self.user_audio_recorder = None
+        if (self.user_audio_recorder and not config['General']['disable_mic']
+                and config['General']['mic_device_index'] != -1):
             print('[INFO] Override default microphone with device specified in parameters file.')
             self.user_audio_recorder.set_device(index=int(config['General']['mic_device_index']))
 
         # Handle speaker if it is not disabled in arguments or yaml file
         print('[INFO] Using default speaker.')
-        self.speaker_audio_recorder = ar.SpeakerRecorder(audio_file_name=f'{data_dir}/logs/speaker.wav')
-        if not config['General']['disable_speaker'] and config['General']['speaker_device_index'] != -1:
+        try:
+            self.speaker_audio_recorder = ar.MicRecorder(audio_file_name=f'{data_dir}/logs/sp.wav', is_speaker=True)
+        except Exception as e:
+            logger.warning(f"Could not initialize speaker recorder: {e}")
+            self.speaker_audio_recorder = None
+        if (self.speaker_audio_recorder and not config['General']['disable_speaker']
+                and config['General']['speaker_device_index'] != -1):
             print('[INFO] Override default speaker with device specified in parameters file.')
             self.speaker_audio_recorder.set_device(index=int(
                 config['General']['speaker_device_index']))

@@ -435,9 +435,10 @@ class AppUI(ctk.CTk):
         """Toggles the state of speaker
         """
         try:
-            self.global_vars.speaker_audio_recorder.enabled = not self.global_vars.speaker_audio_recorder.enabled
-            self.editmenu.entryconfigure(2, label="Disable Speaker" if self.global_vars.speaker_audio_recorder.enabled else "Enable Speaker")
-            self.capture_action(f'{"Enabled " if self.global_vars.speaker_audio_recorder.enabled else "Disabled "} speaker input')
+            if self.global_vars.speaker_audio_recorder:
+                self.global_vars.speaker_audio_recorder.enabled = not self.global_vars.speaker_audio_recorder.enabled
+                self.editmenu.entryconfigure(2, label="Disable Speaker" if self.global_vars.speaker_audio_recorder.enabled else "Enable Speaker")
+                self.capture_action(f'{"Enabled " if self.global_vars.speaker_audio_recorder.enabled else "Disabled "} speaker input')
         except Exception as e:
             logger.error(f"Error toggling speaker state: {e}")
 
@@ -445,9 +446,10 @@ class AppUI(ctk.CTk):
         """Toggles the state of microphone
         """
         try:
-            self.global_vars.user_audio_recorder.enabled = not self.global_vars.user_audio_recorder.enabled
-            self.editmenu.entryconfigure(3, label="Disable Microphone" if self.global_vars.user_audio_recorder.enabled else "Enable Microphone")
-            self.capture_action(f'{"Enabled " if self.global_vars.user_audio_recorder.enabled else "Disabled "} microphone input')
+            if self.global_vars.user_audio_recorder:
+                self.global_vars.user_audio_recorder.enabled = not self.global_vars.user_audio_recorder.enabled
+                self.editmenu.entryconfigure(3, label="Disable Microphone" if self.global_vars.user_audio_recorder.enabled else "Enable Microphone")
+                self.capture_action(f'{"Enabled " if self.global_vars.user_audio_recorder.enabled else "Disabled "} microphone input')
         except Exception as e:
             logger.error(f"Error toggling microphone state: {e}")
 
