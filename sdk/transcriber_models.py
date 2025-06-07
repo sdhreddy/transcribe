@@ -3,6 +3,7 @@ import os
 import datetime
 import json
 import subprocess
+import platform
 from enum import Enum
 from abc import abstractmethod
 import openai
@@ -91,38 +92,39 @@ class WhisperSTTModel(STTModelInterface):
 
     def download_model(self):
         """Download the appropriate OpenAI model if needed"""
-
         if os.path.exists(self.model_filename):
             return
+
         print(f'Could not find the transcription model file: {self.model_filename}')
         utilities.ensure_directory_exists(MODELS_DIR)
-        if self.model == 'tiny':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'base':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'small':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'medium':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'large':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/e5b1a55b89c1367dacf97e3e19bfd829a01529dbfdeefa8caeb59b3f1b81dadb/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'large-v1':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/e4b87e7e0bf463eb8e6956e646f1e277e901512310def2c24bf0e11bd3c28e9a/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'large-v2':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/81f7c96c852ee8fc832187b0132e569d6c3065a3252ed18e56effd0b6a73e524/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        elif self.model == 'large-v3':
-            file_url = 'https://openaipublic.azureedge.net/main/whisper/models/e5b1a55b89c1367dacf97e3e19bfd829a01529dbfdeefa8caeb59b3f1b81dadb/' + self.model_name
-            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
-        else:
+
+        urls = {
+            'tiny': 'https://openaipublic.azureedge.net/main/whisper/models/65147644a518d12f04e32d6f3b26facc3f8dd46e5390956a9424a650c0ce22b9/',
+            'base': 'https://openaipublic.azureedge.net/main/whisper/models/ed3a0b6b1c0edf879ad9b11b1af5a0e6ab5db9205f891f668f8b0e6c6326e34e/',
+            'small': 'https://openaipublic.azureedge.net/main/whisper/models/9ecf779972d90ba49c06d968637d720dd632c55bbf19d441fb42bf17a411e794/',
+            'medium': 'https://openaipublic.azureedge.net/main/whisper/models/345ae4da62f9b3d59415adc60127b97c714f32e89e936602e85993674d08dcb1/',
+            'large': 'https://openaipublic.azureedge.net/main/whisper/models/e5b1a55b89c1367dacf97e3e19bfd829a01529dbfdeefa8caeb59b3f1b81dadb/',
+            'large-v1': 'https://openaipublic.azureedge.net/main/whisper/models/e4b87e7e0bf463eb8e6956e646f1e277e901512310def2c24bf0e11bd3c28e9a/',
+            'large-v2': 'https://openaipublic.azureedge.net/main/whisper/models/81f7c96c852ee8fc832187b0132e569d6c3065a3252ed18e56effd0b6a73e524/',
+            'large-v3': 'https://openaipublic.azureedge.net/main/whisper/models/e5b1a55b89c1367dacf97e3e19bfd829a01529dbfdeefa8caeb59b3f1b81dadb/',
+        }
+
+        if self.model not in urls:
             print('Could not find the correct model file')
             sys.exit()
+
+        file_url = urls[self.model] + self.model_name
+
+        if platform.system().lower().startswith('windows'):
+            utilities.download_using_bits(file_url=file_url, file_path=self.model_filename)
+        else:
+            import requests
+            response = requests.get(file_url, stream=True, timeout=60)
+            response.raise_for_status()
+            with open(self.model_filename, 'wb') as file_handle:
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:
+                        file_handle.write(chunk)
 
     def get_sentences(self, wav_file_path) -> dict:
         """Get transcription from the provided audio file as individual sentences
