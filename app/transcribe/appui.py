@@ -147,6 +147,19 @@ class AppUI(ctk.CTk):
         self.word_cloud_button.grid(row=4, column=4, padx=10, pady=3, sticky="nsew")
         self.word_cloud_button.configure(command=self.word_cloud)
 
+        # TTS volume label and slider
+        self.tts_volume_label = ctk.CTkLabel(self.bottom_frame, text="", font=("Arial", 12),
+                                             text_color="#FFFCF2")
+        self.tts_volume_label.grid(row=4, column=0, columnspan=4, padx=10, pady=3, sticky="nsew")
+
+        self.tts_volume_slider = ctk.CTkSlider(self.bottom_frame, from_=0, to=100, width=300)
+        self.tts_volume_slider.set(config['General'].get('tts_playback_volume', 0.5) * 100)
+        self.tts_volume_slider.grid(row=5, column=0, columnspan=4, padx=10, pady=3, sticky="nsew")
+        self.tts_volume_slider.configure(command=self.update_tts_volume)
+
+        volume_text = f'TTS Volume: {int(self.tts_volume_slider.get())}%'
+        self.tts_volume_label.configure(text=volume_text)
+
         # Continuous read aloud switch
         read_enabled = bool(config['General'].get('continuous_read', False))
         self.continuous_read_button = ctk.CTkSwitch(self.bottom_frame, text="Read Responses Continuously")
@@ -467,6 +480,19 @@ class AppUI(ctk.CTk):
         except Exception as e:
             logger.error(f"Error updating slider value: {e}")
 
+    def update_tts_volume(self, slider_value):
+        """Update TTS playback volume in real-time and save to config"""
+        try:
+            config_obj = configuration.Config()
+            volume_level = float(slider_value) / 100
+            altered_config = {'General': {'tts_playback_volume': volume_level}}
+            config_obj.add_override_value(altered_config)
+            self.tts_volume_label.configure(text=f'TTS Volume: {int(float(slider_value))}%')
+            self.global_vars.audio_player_var.tts_volume = volume_level
+            self.capture_action(f'Update TTS volume to {int(float(slider_value))}%')
+        except Exception as e:
+            logger.error(f"Error updating TTS volume: {e}")
+
     def get_response_now(self):
         """Get response from LLM right away
            Update the Response UI with the response
@@ -504,9 +530,9 @@ class AppUI(ctk.CTk):
             self.global_vars.update_response_now = False
             # Set event to play the recording audio if required
             if self.global_vars.read_response:
-                self.global_vars.audio_player_var.speech_text_available.set()
-                self.global_vars.last_tts_response = response_string
-                self.global_vars.last_spoken_response = response_string
+                # Response playback will be triggered by update_response_ui
+                # which also updates last_tts_response and last_spoken_response
+                pass
             self.response_textbox.configure(state="normal")
             if response_string:
                 write_in_textbox(self.response_textbox, response_string)
