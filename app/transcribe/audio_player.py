@@ -35,6 +35,7 @@ class AudioPlayer:
         self.playing = False
         self.speech_rate = constants.DEFAULT_TTS_SPEECH_RATE
         self.tts_volume = constants.DEFAULT_TTS_VOLUME
+
         self.played_responses: set[str] = set()
         self.last_playback_end: float = 0.0
 
@@ -42,6 +43,7 @@ class AudioPlayer:
         """Clear memory of played responses."""
         with self.play_lock:
             self.played_responses.clear()
+
 
     def stop_current_playback(self):
         """Stop any current audio playback"""
@@ -57,7 +59,11 @@ class AudioPlayer:
         self.current_process = None
 
     def play_audio(self, speech: str, lang: str, rate: float | None = None,
+
                    volume: float | None = None, response_id: str | None = None):
+
+                   volume: float | None = None):
+
         """Play text as audio.
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
@@ -71,6 +77,7 @@ class AudioPlayer:
             audio_obj.save(temp_audio_file[1])
             now = time.time()
             with self.play_lock:
+
                 if now - self.last_playback_end < 1.0:
                     logger.info("Skipping potential duplicate within 1s window")
                     return
@@ -83,6 +90,13 @@ class AudioPlayer:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
                 logger.info("Audio playback starting")
+
+                if self.playing:
+                    logger.warning("Audio already playing, skipping redundant call.")
+                    return
+
+                logger.info("Audio playback starting")
+
                 self.playing = True
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
@@ -110,7 +124,9 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
                 self.playing = False
+
                 self.last_playback_end = time.time()
+
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
@@ -142,15 +158,46 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
+
                     current_volume = self.tts_volume
                     logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+
+
+
                     self.play_audio(
                         speech=final_speech,
                         lang=lang_code,
                         rate=rate,
                         volume=current_volume,
+
                         response_id=final_speech,
                     )
+
+                    )
+
+
+
+                    self.play_audio(speech=final_speech, lang=lang_code,
+                                   rate=rate, volume=volume)
+
+
+
+
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
