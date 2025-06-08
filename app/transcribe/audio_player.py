@@ -32,7 +32,9 @@ class AudioPlayer:
         self.stop_loop = False
         self.current_process = None
         self.play_lock = threading.Lock()
+        self.playing = False
         self.speech_rate = constants.DEFAULT_TTS_SPEECH_RATE
+        self.tts_volume = constants.DEFAULT_TTS_VOLUME
 
     def stop_current_playback(self):
         """Stop any current audio playback"""
@@ -47,12 +49,13 @@ class AudioPlayer:
                     pass
         self.current_process = None
 
-    def play_audio(self, speech: str, lang: str, rate: float | None = None):
+    def play_audio(self, speech: str, lang: str, rate: float | None = None,
+                   volume: float | None = None):
         """Play text as audio.
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
         """
-        logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        logger.info(f'{self.__class__.__name__} - play_audio called')  # pylint: disable=W1203
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
@@ -60,10 +63,20 @@ class AudioPlayer:
 
             audio_obj.save(temp_audio_file[1])
             with self.play_lock:
+                if self.playing:
+                    logger.warning("Audio already playing, skipping redundant call.")
+                    return
+                logger.info("Audio playback starting")
+                self.playing = True
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
+                filters = []
                 if rate and rate != 1.0:
-                    cmd += ['-af', f'atempo={rate}']
+                    filters.append(f'atempo={rate}')
+                if volume is not None and volume != 1.0:
+                    filters.append(f'volume={volume}')
+                if filters:
+                    cmd += ['-af', ','.join(filters)]
                 cmd.append(temp_audio_file[1])
                 self.current_process = subprocess.Popen(
                     cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -80,6 +93,7 @@ class AudioPlayer:
             os.remove(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
+                self.playing = False
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
@@ -88,9 +102,12 @@ class AudioPlayer:
         lang_code = self._get_language_code(lang)
         rate = config.get('General', {}).get('tts_speech_rate', self.speech_rate)
         self.speech_rate = rate
+        volume = config.get('General', {}).get('tts_playback_volume', self.tts_volume)
+        self.tts_volume = volume
 
         while self.stop_loop is False:
             if self.speech_text_available.is_set() and self.read_response:
+                logger.info("play_audio_loop triggered by speech_text_available")
                 self.speech_text_available.clear()
                 speech = self._get_speech_text()
                 final_speech = self._process_speech_text(speech)
@@ -108,12 +125,20 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
-                    self.play_audio(speech=final_speech, lang=lang_code, rate=rate)
+                    current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+                    self.play_audio(
+                        speech=final_speech,
+                        lang=lang_code,
+                        rate=rate,
+                        volume=current_volume,
+                    )
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
                     gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
+                    logger.info("Audio playback finished")
 
                     # Reset last_spoken_response so any queued text is cleared
                     # after playback completes. update_response_ui will
