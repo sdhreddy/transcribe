@@ -35,10 +35,18 @@ class TestNoImmediateDuplicatePlayback(unittest.TestCase):
         convo.context.audio_queue.empty.return_value = True
         with patch('subprocess.Popen', side_effect=fake_popen) as popen_mock:
             player = AudioPlayer(convo=convo)
+
             t1 = threading.Thread(target=player.play_audio, args=('hi','en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'x'})
             t1.start()
             time.sleep(0.05)
             player.play_audio('hi','en', rate=1.0, volume=0.5, response_id='x')
+
+            t1 = threading.Thread(target=player.play_audio, args=('hi','en'), kwargs={'rate':1.0, 'volume':0.5})
+            t1.start()
+            time.sleep(0.05)
+            player.play_audio('hi','en', rate=1.0, volume=0.5)
+
+
             t1.join()
             self.assertEqual(popen_mock.call_count, 1)
 
