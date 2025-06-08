@@ -12,12 +12,16 @@ from abc import abstractmethod
 # import pprint
 import wave
 import tempfile
-import pyaudiowpatch as pyaudio
+try:
+    import pyaudiowpatch as pyaudio
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    import pyaudio  # type: ignore
 from difflib import SequenceMatcher
 # from db import AppDB as appdb
 import conversation  # noqa: E402 pylint: disable=C0413
 import constants  # noqa: E402 pylint: disable=C0413
-sys.path.append('../..')
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import custom_speech_recognition as sr  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413
 from tsutils import duration, utilities  # noqa: E402 pylint: disable=C0413

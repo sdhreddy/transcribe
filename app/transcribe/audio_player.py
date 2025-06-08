@@ -69,6 +69,7 @@ class AudioPlayer:
         response_id: Optional[str] = None,
     ) -> None:
 
+
     def play_audio(self, speech: str, lang: str, rate: float | None = None,
 
                    volume: float | None = None, response_id: str | None = None):
@@ -104,11 +105,13 @@ class AudioPlayer:
                 logger.info("Audio playback starting")
 
 
+
                 if self.playing:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
 
                 logger.info("Audio playback starting")
+
 
 
                 self.playing = True
@@ -143,6 +146,10 @@ class AudioPlayer:
 
 
                 self.last_playback_end = time.time()
+
+
+                self.last_playback_end = time.time()
+
 
 
     def play_audio_loop(self, config: dict):
@@ -197,6 +204,11 @@ class AudioPlayer:
 
 
                     current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+
 
 
 
@@ -214,12 +226,17 @@ class AudioPlayer:
                         response_id=final_speech,
                     )
 
+
+                        response_id=final_speech,
+                    )
+
                     )
 
 
 
                     self.play_audio(speech=final_speech, lang=lang_code,
                                    rate=rate, volume=volume)
+
 
 
 

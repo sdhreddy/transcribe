@@ -6,12 +6,15 @@ import wave
 from datetime import datetime
 from abc import abstractmethod
 
-import pyaudiowpatch as pyaudio
+try:
+    import pyaudiowpatch as pyaudio
+except ModuleNotFoundError:  # pragma: no cover - optional dependency
+    import pyaudio  # type: ignore
 import custom_speech_recognition as sr
 from tsutils import app_logging as al
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 
-sys.path.append('../..')
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 ENERGY_THRESHOLD = 1000
 DYNAMIC_ENERGY_THRESHOLD = False

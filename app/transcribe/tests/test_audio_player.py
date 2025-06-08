@@ -84,6 +84,9 @@ class TestAudioPlayer(unittest.TestCase):
 
         mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5, volume=0.5, response_id='Hello, this is a test.')
 
+
+        mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5, volume=0.5, response_id='Hello, this is a test.')
+
         mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5, volume=0.5)
 
 
