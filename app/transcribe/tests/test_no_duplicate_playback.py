@@ -35,8 +35,26 @@ class TestNoDuplicatePlayback(unittest.TestCase):
 
         with patch('subprocess.Popen', side_effect=fake_popen) as popen_mock:
             player = AudioPlayer(convo=convo)
+
             t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
             t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+
+
+            t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+            t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+
+            t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+            t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+
+
+            t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+            t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+
+            t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5})
+            t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5})
+
+
+
             t1.start()
             t2.start()
             t1.join()
