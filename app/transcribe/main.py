@@ -1,11 +1,18 @@
 import sys
 import time
 import atexit
-import app_utils as au
-from args import create_args, update_args_config, handle_args_batch_tasks
-from global_vars import T_GLOBALS
-from appui import AppUI
-sys.path.append('../..')
+import os
+
+# Allow `python main.py` *or* `python -m app.transcribe.main`
+if __package__ is None:
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    sys.path.append(repo_root)
+    __package__ = "app.transcribe"
+
+from . import app_utils as au
+from .args import create_args, update_args_config, handle_args_batch_tasks
+from .global_vars import T_GLOBALS
+from .appui import AppUI
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413
 from tsutils import utilities as u  # noqa: E402 pylint: disable=C0413
