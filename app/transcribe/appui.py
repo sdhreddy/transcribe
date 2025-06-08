@@ -526,7 +526,24 @@ class AppUI(ctk.CTk):
         """
         try:
             logger.info("update_response_ui_threaded invoked")
+
             self.global_vars.audio_player_var.reset_played_responses()
+
+
+            self.global_vars.audio_player_var.reset_played_responses()
+
+
+            self.global_vars.audio_player_var.reset_played_responses()
+
+
+            self.global_vars.audio_player_var.reset_played_responses()
+
+
+            self.global_vars.audio_player_var.reset_played_responses()
+
+
+
+
             self.global_vars.update_response_now = True
             response_string = response_generator()
             self.global_vars.update_response_now = False
