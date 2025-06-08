@@ -178,22 +178,26 @@ class Conversation:
                                                                  inv_id=inv_id)
         return convo_id
 
-    def on_convo_select(self, input_text: str):
-        """Callback when a specific conversation is selected.
-        """
-        end_speaker = input_text.find(':')
+    def _extract_convo_id(self, line_text: str):
+        """Helper to extract conversation id from UI line text."""
+        end_speaker = line_text.find(":")
         if end_speaker == -1:
-            self.context.previous_response = None
-            return
-        persona = input_text[:end_speaker].strip()
-        transcript = self.transcript_data[persona]
-        for _, (first, _, third) in enumerate(transcript):
-            if first.strip() == input_text.strip():
-                convo_id = third
-                break
+            return None
+        persona = line_text[:end_speaker].strip()
+        transcript = self.transcript_data.get(persona)
+        if not transcript:
+            return None
+        for first, _, convo_id in transcript:
+            if first.strip() == line_text.strip():
+                return convo_id
+        return None
 
+    def on_convo_select(self, line_text: str):
+        """Callback when a specific conversation is selected."""
+        convo_id = None
+        if line_text:
+            convo_id = self._extract_convo_id(line_text)
         if not convo_id:
-            self.context.previous_response = None
             return
 
         # Get LLM_response for this convo_id

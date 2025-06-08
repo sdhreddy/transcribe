@@ -14,6 +14,7 @@ import wave
 import tempfile
 import pyaudio
 from difflib import SequenceMatcher
+import logging
 # from db import AppDB as appdb
 import conversation  # noqa: E402 pylint: disable=C0413
 import constants  # noqa: E402 pylint: disable=C0413
@@ -30,6 +31,8 @@ from sdk.transcriber_models import WhisperCPPSTTModel
 # pylint: disable=logging-fstring-interpolation
 PHRASE_TIMEOUT = 3.05
 logger = al.get_module_logger(al.TRANSCRIBER_LOGGER)
+# List available microphone sources for lookups
+available_sources = sr.Microphone.list_microphone_names()
 # Attempt to prune after these number of segments in transcription
 WHISPER_SEGMENT_PRUNE_THRESHOLD = 6
 # Duration of audio (seconds) after which force pruning
@@ -77,11 +80,11 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             },
             "Speaker": {
                 # int
-                "sample_rate": speaker_source.SAMPLE_RATE,
+                "sample_rate": mic_source.SAMPLE_RATE if speaker_source is None else speaker_source.SAMPLE_RATE,
                 # int
-                "sample_width": speaker_source.SAMPLE_WIDTH,
+                "sample_width": mic_source.SAMPLE_WIDTH if speaker_source is None else speaker_source.SAMPLE_WIDTH,
                 # int
-                "channels": speaker_source.channels,
+                "channels": mic_source.channels if speaker_source is None else speaker_source.channels,
                 "last_sample": bytes(),  # Raw bytes for wav format data
                 # Timestamp (UTC) for when the last transcribed audio record was put in queue
                 "last_spoken": None,
@@ -429,10 +432,22 @@ class WhisperTranscriber(AudioTranscriber):
     def __init__(self, mic_source, speaker_source, model,
                  convo: conversation.Conversation, config: dict,
                  source_name: str):
+        try:
+            _ = available_sources.index(source_name)
+            selected_source = source_name
+        except ValueError:
+            selected_source = available_sources[0] if available_sources else source_name
+            logging.warning(
+                "Audio source '%s' not found. Falling back to '%s'.",
+                source_name,
+                selected_source,
+            )
+
         if mic_source is None:
             raise ValueError(
-                f"Audio source '{source_name}' not found. Please configure a valid microphone source."  # noqa: E501
+                f"Audio source '{selected_source}' not found. Please configure a valid microphone source."  # noqa: E501
             )
+        self.source = selected_source
         self.sample_rate = mic_source.SAMPLE_RATE
         super().__init__(mic_source, speaker_source, model, convo, config)
 

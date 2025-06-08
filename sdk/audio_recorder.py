@@ -6,6 +6,7 @@ import wave
 from datetime import datetime
 from abc import abstractmethod
 
+import logging
 import pyaudio
 import custom_speech_recognition as sr
 from tsutils import app_logging as al
@@ -36,6 +37,24 @@ DRIVER_TYPE = {
     12: 'JACK Audio Connection Kit',
     13: 'Windows Vista Audio stack architecture'
 }
+
+
+def list_audio_devices():
+    """Return lists of available input and output audio devices."""
+    pa = pyaudio.PyAudio()
+    input_devices = []
+    output_devices = []
+    for i in range(pa.get_device_count()):
+        info = pa.get_device_info_by_index(i)
+        name = info.get('name')
+        if info.get('maxInputChannels', 0) > 0:
+            input_devices.append((i, name))
+        if info.get('maxOutputChannels', 0) > 0:
+            output_devices.append((i, name))
+    logging.info("Available input devices: %s", input_devices)
+    logging.info("Available output devices: %s", output_devices)
+    pa.terminate()
+    return input_devices, output_devices
 
 
 def print_detailed_audio_info(print_func=print):
@@ -191,11 +210,34 @@ class MicRecorder(BaseRecorder):
     """Encapsultes the Microphone device audio input
     """
     def __init__(self, source_name='You', audio_file_name: str = None):
-        self.source = sr.Microphone(sample_rate=16000)
-        self.device_index = self.source.device_index
-        self.device_info = None
-        super().__init__(source=self.source, source_name=source_name, audio_file_name=audio_file_name)
-        self.adjust_for_noise("Default Mic", "Please make some noise from the Default Mic...")
+        logger.info(MicRecorder.__name__)
+        pa = pyaudio.PyAudio()
+        try:
+            info = pa.get_default_input_device_info()
+        except IOError:
+            inputs, _ = list_audio_devices()
+            if inputs:
+                info = pa.get_device_info_by_index(inputs[0][0])
+                logging.warning(
+                    "No default input device. Falling back to: %s", info["name"]
+                )
+            else:
+                pa.terminate()
+                raise RuntimeError("No input audio devices found.")
+        self.device_index = info["index"]
+        self.device_info = info
+        pa.terminate()
+        self.source = sr.Microphone(
+            device_index=self.device_index,
+            sample_rate=int(info["defaultSampleRate"]),
+            channels=1,
+        )
+        super().__init__(
+            source=self.source, source_name=source_name, audio_file_name=audio_file_name
+        )
+        self.adjust_for_noise(
+            "Default Mic", "Please make some noise from the Default Mic..."
+        )
 
 #    def __init__(self):
 #        logger.info(MicRecorder.__name__)
@@ -226,9 +268,10 @@ class MicRecorder(BaseRecorder):
         """Set active device based on index.
         """
         logger.info(MicRecorder.set_device.__name__)
-        with pyaudio.PyAudio() as py_audio:
-            self.device_index = index
-            mic = py_audio.get_device_info_by_index(self.device_index)
+        pa = pyaudio.PyAudio()
+        self.device_index = index
+        mic = pa.get_device_info_by_index(self.device_index)
+        pa.terminate()
 
         # Stop the current stream
         if self.stop_record_func is not None:
@@ -249,26 +292,42 @@ class SpeakerRecorder(BaseRecorder):
     """
     def __init__(self, source_name='Speaker', audio_file_name: str = None):
         logger.info(SpeakerRecorder.__name__)
-        with pyaudio.PyAudio() as p:
-            wasapi_inf = p.get_host_api_info_by_type(pyaudio.paWASAPI)
+        pa = pyaudio.PyAudio()
+        try:
+            wasapi_inf = pa.get_host_api_info_by_type(pyaudio.paWASAPI)
             self.device_index = wasapi_inf["defaultOutputDevice"]
-            default_speakers = p.get_device_info_by_index(self.device_index)
+            default_speakers = pa.get_device_info_by_index(self.device_index)
+        except Exception:
+            _, outputs = list_audio_devices()
+            if outputs:
+                self.device_index = outputs[0][0]
+                default_speakers = pa.get_device_info_by_index(self.device_index)
+                logging.warning(
+                    "No default output device. Falling back to: %s",
+                    default_speakers["name"],
+                )
+            else:
+                pa.terminate()
+                raise RuntimeError("No output audio devices found.")
 
-            if not default_speakers["isLoopbackDevice"]:
-                for loopback in p.get_loopback_device_info_generator():
-                    if default_speakers["name"] in loopback["name"]:
-                        default_speakers = loopback
-                        break
-                else:
-                    print("[ERROR] No loopback device found.")
-
+        if not default_speakers.get("isLoopbackDevice"):
+            for loopback in pa.get_loopback_device_info_generator():
+                if default_speakers["name"] in loopback["name"]:
+                    default_speakers = loopback
+                    break
+            else:
+                print("[ERROR] No loopback device found.")
         self.device_info = default_speakers
+        pa.terminate()
 
-        source = sr.Microphone(speaker=True,
-                               device_index=default_speakers["index"],
-                               sample_rate=int(default_speakers["defaultSampleRate"]),
-                               chunk_size=pyaudio.get_sample_size(pyaudio.paInt16),
-                               channels=default_speakers["maxInputChannels"])
+        source = sr.Microphone(
+            speaker=True,
+            device_index=default_speakers["index"],
+            sample_rate=int(default_speakers["defaultSampleRate"]),
+            chunk_size=pyaudio.get_sample_size(pyaudio.paInt16),
+            channels=default_speakers["maxInputChannels"],
+        )
+
         super().__init__(source=source, source_name=source_name, audio_file_name=audio_file_name)
         print(f'[INFO] Listening to sound from Speaker: {self.get_name()} ')
         # On some devices, speaker adjustment is very slow unless some noise is
@@ -284,17 +343,18 @@ class SpeakerRecorder(BaseRecorder):
         """Set active device based on index.
         """
         logger.info(SpeakerRecorder.set_device.__name__)
-        with pyaudio.PyAudio() as p:
-            self.device_index = index
-            speakers = p.get_device_info_by_index(self.device_index)
+        pa = pyaudio.PyAudio()
+        self.device_index = index
+        speakers = pa.get_device_info_by_index(self.device_index)
 
-            if not speakers["isLoopbackDevice"]:
-                for loopback in p.get_loopback_device_info_generator():
-                    if speakers["name"] in loopback["name"]:
-                        speakers = loopback
-                        break
-                else:
-                    print("[ERROR] No loopback device found.")
+        if not speakers.get("isLoopbackDevice"):
+            for loopback in pa.get_loopback_device_info_generator():
+                if speakers["name"] in loopback["name"]:
+                    speakers = loopback
+                    break
+            else:
+                print("[ERROR] No loopback device found.")
+        pa.terminate()
 
         # Stop the current stream
         if self.stop_record_func is not None:
@@ -315,14 +375,9 @@ class SpeakerRecorder(BaseRecorder):
 
 if __name__ == "__main__":
     print_detailed_audio_info()
-    # Below statements are useful to view all available fields in the
-    # default Input Device.
-    # Do not delete these lines
-    with pyaudio.PyAudio() as p:
-        wasapi_info = p.get_host_api_info_by_type(pyaudio.paWASAPI)
-        print(wasapi_info)
-
-    with pyaudio.PyAudio() as p:
-        wasapi_info = p.get_host_api_info_by_type(pyaudio.paWASAPI)
-        default_mic = p.get_device_info_by_index(wasapi_info["defaultInputDevice"])
-        print(default_mic)
+    pa = pyaudio.PyAudio()
+    wasapi_info = pa.get_host_api_info_by_type(pyaudio.paWASAPI)
+    print(wasapi_info)
+    default_mic = pa.get_device_info_by_index(wasapi_info["defaultInputDevice"])
+    print(default_mic)
+    pa.terminate()
