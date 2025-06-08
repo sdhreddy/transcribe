@@ -32,7 +32,11 @@ class TestSinglePlayback(unittest.TestCase):
 
         with patch('subprocess.Popen', side_effect=fake_popen):
             player = AudioPlayer(convo=convo)
+
+            player.play_audio('hi', 'en', rate=1.0, volume=0.5, response_id='s')
+
             player.play_audio('hi', 'en', rate=1.0, volume=0.5)
+
             self.assertEqual(len(popen_calls), 1)
 
 if __name__ == '__main__':
