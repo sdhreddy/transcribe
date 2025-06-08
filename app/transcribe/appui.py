@@ -15,7 +15,7 @@ from tsutils.language import LANGUAGES_DICT
 from tsutils import utilities
 from tsutils import app_logging as al
 from tsutils import configuration
-from uicomp.selectable_text import SelectableText
+from .uicomp.selectable_text import SelectableText
 import numpy as np
 from PIL import Image
 from wordcloud import WordCloud
@@ -537,6 +537,10 @@ class AppUI(ctk.CTk):
 
 
             self.global_vars.audio_player_var.reset_played_responses()
+
+
+            self.global_vars.audio_player_var.reset_played_responses()
+
 
 
 

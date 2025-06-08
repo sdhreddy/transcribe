@@ -17,6 +17,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from . import interactions  # noqa: E402 pylint: disable=C0413
 
+
 from global_vars import TranscriptionGlobals
 from audio_player import AudioPlayer  # noqa: E402 pylint: disable=C0413
 from gpt_responder import InferenceResponderFactory, InferenceEnum
@@ -25,6 +26,7 @@ from db.app_db import AppDB
 import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import interactions  # noqa: E402 pylint: disable=C0413
+
 
 from sdk import transcriber_models as tm  # noqa: E402 pylint: disable=C0413
 from tsutils import utilities, language

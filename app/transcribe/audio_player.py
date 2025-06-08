@@ -45,7 +45,6 @@ class AudioPlayer:
         with self.play_lock:
             self.played_responses.clear()
 
-
     def stop_current_playback(self):
         """Stop any current audio playback"""
         if self.current_process and self.current_process.poll() is None:
@@ -71,11 +70,13 @@ class AudioPlayer:
 
 
 
+
     def play_audio(self, speech: str, lang: str, rate: float | None = None,
 
                    volume: float | None = None, response_id: str | None = None):
 
                    volume: float | None = None):
+
 
 
         """Play text as audio.
@@ -108,11 +109,13 @@ class AudioPlayer:
 
 
 
+
                 if self.playing:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
 
                 logger.info("Audio playback starting")
+
 
 
 
@@ -144,6 +147,9 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
                 self.playing = False
+
+                self.last_playback_end = time.time()
+
 
                 self.last_playback_end = time.time()
 
@@ -218,7 +224,10 @@ class AudioPlayer:
 
 
                     current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
 
+
+                    current_volume = self.tts_volume
 
 
 
@@ -228,6 +237,10 @@ class AudioPlayer:
                         lang=lang_code,
                         rate=rate,
                         volume=current_volume,
+
+                        response_id=final_speech,
+                    )
+
 
                         response_id=final_speech,
                     )

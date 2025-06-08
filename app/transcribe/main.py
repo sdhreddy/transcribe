@@ -2,11 +2,20 @@ import sys
 import time
 import atexit
 
+
+# Allow `python main.py` *or* `python -m app.transcribe.main`
+if __package__ is None:
+    repo_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    sys.path.append(repo_root)
+    __package__ = "app.transcribe"
+
+
 import os
 
 if __package__ in (None, "", "__main__"):
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
     __package__ = 'app.transcribe'
+
 
 from . import app_utils as au
 from .args import create_args, update_args_config, handle_args_batch_tasks

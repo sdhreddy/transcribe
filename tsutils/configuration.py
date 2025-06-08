@@ -1,6 +1,7 @@
 import sys
 import time
 import copy
+import os
 import yaml
 from tsutils import Singleton
 from tsutils import utilities
@@ -27,8 +28,22 @@ class Config(Singleton.Singleton):
         if self._initialized:
             return
 
-        self._default_config_filename = default_config_filename
-        self._override_config_filename = override_config_filename
+        repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+        default_path = default_config_filename
+        if not os.path.isabs(default_config_filename):
+            if not os.path.exists(default_config_filename):
+                cand = os.path.join(repo_root, 'app', 'transcribe', default_config_filename)
+                if os.path.exists(cand):
+                    default_path = cand
+        override_path = override_config_filename
+        if not os.path.isabs(override_config_filename):
+            if not os.path.exists(override_config_filename):
+                cand_over = os.path.join(repo_root, 'app', 'transcribe', override_config_filename)
+                if os.path.exists(cand_over):
+                    override_path = cand_over
+
+        self._default_config_filename = default_path
+        self._override_config_filename = override_path
         self.read_config_from_files()
         self._initialized = True
 

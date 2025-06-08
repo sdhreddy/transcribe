@@ -41,6 +41,7 @@ class TestNoImmediateDuplicatePlayback(unittest.TestCase):
             time.sleep(0.05)
             player.play_audio('hi','en', rate=1.0, volume=0.5, response_id='x')
 
+
             t1 = threading.Thread(target=player.play_audio, args=('hi','en'), kwargs={'rate':1.0, 'volume':0.5})
             t1.start()
             time.sleep(0.05)
