@@ -32,6 +32,7 @@ class AudioPlayer:
         self.stop_loop = False
         self.current_process = None
         self.play_lock = threading.Lock()
+        self.playing = False
         self.speech_rate = constants.DEFAULT_TTS_SPEECH_RATE
         self.tts_volume = constants.DEFAULT_TTS_VOLUME
 
@@ -62,6 +63,10 @@ class AudioPlayer:
 
             audio_obj.save(temp_audio_file[1])
             with self.play_lock:
+                if self.playing:
+                    logger.warning("Audio already playing, skipping redundant call.")
+                    return
+                self.playing = True
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
                 filters = []
@@ -87,6 +92,7 @@ class AudioPlayer:
             os.remove(temp_audio_file[1])
             with self.play_lock:
                 self.stop_current_playback()
+                self.playing = False
 
     def play_audio_loop(self, config: dict):
         """Continuously play text as audio based on event signaling.
@@ -123,6 +129,11 @@ class AudioPlayer:
 
 
                     current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+
 
                     self.play_audio(
                         speech=final_speech,
@@ -134,6 +145,7 @@ class AudioPlayer:
 
                     self.play_audio(speech=final_speech, lang=lang_code,
                                    rate=rate, volume=volume)
+
 
 
                 finally:
