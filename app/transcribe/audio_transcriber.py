@@ -80,11 +80,11 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             },
             "Speaker": {
                 # int
-                "sample_rate": speaker_source.SAMPLE_RATE,
+                "sample_rate": mic_source.SAMPLE_RATE if speaker_source is None else speaker_source.SAMPLE_RATE,
                 # int
-                "sample_width": speaker_source.SAMPLE_WIDTH,
+                "sample_width": mic_source.SAMPLE_WIDTH if speaker_source is None else speaker_source.SAMPLE_WIDTH,
                 # int
-                "channels": speaker_source.channels,
+                "channels": mic_source.channels if speaker_source is None else speaker_source.channels,
                 "last_sample": bytes(),  # Raw bytes for wav format data
                 # Timestamp (UTC) for when the last transcribed audio record was put in queue
                 "last_spoken": None,

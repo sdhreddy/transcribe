@@ -848,13 +848,15 @@ def update_response_ui(responder: gr.GPTResponder,
     """
     global global_vars_module  # pylint: disable=W0603
 
-    if global_vars_module is None:
-        global_vars_module = TranscriptionGlobals()
-    if not hasattr(global_vars_module, 'responder') or global_vars_module.responder is None:
-        from types import SimpleNamespace
-        import threading
-        global_vars_module.responder = SimpleNamespace(enabled=False, streaming_complete=threading.Event())
-    if not hasattr(global_vars_module, 'update_response_now'):
+    from types import SimpleNamespace
+    import threading
+
+    if getattr(global_vars_module, "responder", None) is None:
+        global_vars_module.responder = SimpleNamespace(
+            enabled=False,
+            streaming_complete=threading.Event(),
+        )
+    if not hasattr(global_vars_module, "update_response_now"):
         global_vars_module.update_response_now = False
     response = None
 

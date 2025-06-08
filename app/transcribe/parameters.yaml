@@ -1,6 +1,6 @@
 OpenAI:
-  api_key: 
-  base_url: 'https://api.openai.com/v1'
+  api_key: "REPLACE_WITH_REAL_KEY"
+  base_url: "https://api.openai.com/v1"
 # Possible model values
 # gpt-4o, gpt-4o-2024-05-13
 # gpt-4-turbo, gpt-4-turbo-2024-04-09, gpt-4, gpt-4-0613, gpt-4-32k, gpt-4-32k-0613
@@ -34,7 +34,7 @@ OpenAI:
   temperature: 0.0
 
 Deepgram:
-  api_key: 'API_KEY'
+  api_key: "REPLACE_WITH_REAL_KEY"
 
 Together:
   api_key: 'API_KEY'
@@ -67,18 +67,18 @@ General:
 # Index of microphone device. Value of -1 indicates it is not set.
 # This is equivalent to -mi (mic_device_index) argument on command line
 # Command line argument takes precedence over value specified in parameters.yaml
-  mic_device_index: -1
+  mic_device_index: 0
 # Index of speaker device.  Value of -1 indicates it is not set.
 # This is equivalent to -si (speaker_device_index) argument on command line
 # Command line argument takes precedence over value specified in parameters.yaml
-  speaker_device_index: -1
+  speaker_device_index: 0
 # Disable Microphone
 # This is equivalent to -dm (disable_mic) argument on command line
 # Command line argument takes precedence over value specified in parameters.yaml
-  disable_mic: False
+  disable_mic:  false
 # This is equivalent to -ds (disable_speaker) argument on command line
 # Command line argument takes precedence over value specified in parameters.yaml
-  disable_speaker: False
+  disable_speaker: true
   stt: whisper
   continuous_response: True
   # Automatically read all AI responses aloud when enabled
@@ -101,10 +101,10 @@ General:
 # The combination of system_prompt, initial_convo is used to create a multi turn prompt message for LLM.
 # system_prompt_1, systen_prompt_2 are here as samples of other possible prompts.
 # Only the content of system_prompt parameter will be used
-  system_prompt: “You are IT expert.  Read the entire conversation history provided and then give a single, clear recommendation, output crisp line (5-12 words) for me to say."
+  system_prompt: "You are IT expert.  Read the entire conversation history provided and then give a single, clear recommendation, output crisp line (5-12 words) for me to say."
 #  system_prompt: "You are an expert at Basketball and helping others learn about basketball. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 #  system_prompt: "You are an expert at Fantasy Football and helping others learn about Fantasy football. Please respond, in detail, to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
-#  system_prompt: “You are an expert Agile Coach and are interviewing for a position. Respond in detail to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
+#  system_prompt: "You are an expert Agile Coach and are interviewing for a position. Respond in detail to the conversation. Confidently give a straightforward response to the speaker, even if you don't understand them. Give your response in square brackets. DO NOT ask to repeat, and DO NOT ask for clarification. Just answer the speaker directly."
 
   summary_prompt: 'create a summary of the following text, highlight key points.  Also answer any questions asked by the colleague directly or indirectly based on the whole conversation. Then provide suggestions and questions for discussions that I can use. Keep them concise—one sentence or even a few keywords. Keep all suggestions short and clear.'
 
