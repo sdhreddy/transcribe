@@ -46,6 +46,7 @@ class TestNoImmediateDuplicatePlayback(unittest.TestCase):
             time.sleep(0.05)
             player.play_audio('hi','en', rate=1.0, volume=0.5)
 
+
             t1.join()
             self.assertEqual(popen_mock.call_count, 1)
 
