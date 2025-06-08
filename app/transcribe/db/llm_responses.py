@@ -8,6 +8,7 @@ including creating the table, inserting responses, and populating initial data.
 import datetime
 import sqlalchemy as sqldb
 from sqlalchemy import Column, Integer, String, MetaData, DateTime, Engine, insert, select
+from typing import Optional
 from sqlalchemy.orm import Session, mapped_column, declarative_base, Mapped
 
 TABLE_NAME = 'LLMResponses'
@@ -100,7 +101,7 @@ class LLMResponses:
 
         self._metadata.create_all(self.engine)
 
-    def insert_response(self, invocation_id: int, conversation_id: int, text: str, engine: Engine | None = None) -> int:
+    def insert_response(self, invocation_id: int, conversation_id: int, text: str, engine: Optional[Engine] = None) -> int:
         """
         Inserts a response entry into the LLMResponses table.
 

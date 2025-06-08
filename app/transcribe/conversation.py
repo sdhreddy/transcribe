@@ -1,12 +1,13 @@
 import sys
 from heapq import merge
 import datetime
-import constants
-from db import (
+from . import constants
+from .db import (
     AppDB as appdb,
     conversation as convodb,
     llm_responses as llmrdb)
-sys.path.append('../..')
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 
 

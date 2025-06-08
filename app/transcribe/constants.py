@@ -18,3 +18,5 @@ PLAYBACK_IGNORE_WINDOW_SECONDS = 2.0
 IGNORE_SIMILARITY_THRESHOLD = 0.85
 # Default speech rate for TTS output (1.0 is normal speed)
 DEFAULT_TTS_SPEECH_RATE = 1.3
+# Default volume for TTS playback (1.0 is 100%)
+DEFAULT_TTS_VOLUME = 0.5

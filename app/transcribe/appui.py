@@ -6,11 +6,11 @@ import webbrowser
 import pyperclip
 import customtkinter as ctk
 from tktooltip import ToolTip
-from audio_transcriber import AudioTranscriber
-import prompts
-from global_vars import TranscriptionGlobals, T_GLOBALS
-import constants
-import gpt_responder as gr
+from .audio_transcriber import AudioTranscriber
+from . import prompts
+from .global_vars import TranscriptionGlobals, T_GLOBALS
+from . import constants
+from . import gpt_responder as gr
 from tsutils.language import LANGUAGES_DICT
 from tsutils import utilities
 from tsutils import app_logging as al
@@ -146,6 +146,19 @@ class AppUI(ctk.CTk):
         self.word_cloud_button = ctk.CTkButton(self.bottom_frame, text="Display Word Cloud")
         self.word_cloud_button.grid(row=4, column=4, padx=10, pady=3, sticky="nsew")
         self.word_cloud_button.configure(command=self.word_cloud)
+
+        # TTS volume label and slider
+        self.tts_volume_label = ctk.CTkLabel(self.bottom_frame, text="", font=("Arial", 12),
+                                             text_color="#FFFCF2")
+        self.tts_volume_label.grid(row=4, column=0, columnspan=4, padx=10, pady=3, sticky="nsew")
+
+        self.tts_volume_slider = ctk.CTkSlider(self.bottom_frame, from_=0, to=100, width=300)
+        self.tts_volume_slider.set(config['General'].get('tts_playback_volume', 0.5) * 100)
+        self.tts_volume_slider.grid(row=5, column=0, columnspan=4, padx=10, pady=3, sticky="nsew")
+        self.tts_volume_slider.configure(command=self.update_tts_volume)
+
+        volume_text = f'TTS Volume: {int(self.tts_volume_slider.get())}%'
+        self.tts_volume_label.configure(text=volume_text)
 
         # Continuous read aloud switch
         read_enabled = bool(config['General'].get('continuous_read', False))
@@ -467,6 +480,19 @@ class AppUI(ctk.CTk):
         except Exception as e:
             logger.error(f"Error updating slider value: {e}")
 
+    def update_tts_volume(self, slider_value):
+        """Update TTS playback volume in real-time and save to config"""
+        try:
+            config_obj = configuration.Config()
+            volume_level = float(slider_value) / 100
+            altered_config = {'General': {'tts_playback_volume': volume_level}}
+            config_obj.add_override_value(altered_config)
+            self.tts_volume_label.configure(text=f'TTS Volume: {int(float(slider_value))}%')
+            self.global_vars.audio_player_var.tts_volume = volume_level
+            self.capture_action(f'Update TTS volume to {int(float(slider_value))}%')
+        except Exception as e:
+            logger.error(f"Error updating TTS volume: {e}")
+
     def get_response_now(self):
         """Get response from LLM right away
            Update the Response UI with the response
@@ -499,14 +525,16 @@ class AppUI(ctk.CTk):
         """Helper method to update response UI in a separate thread
         """
         try:
+            logger.info("update_response_ui_threaded invoked")
+            self.global_vars.audio_player_var.reset_played_responses()
             self.global_vars.update_response_now = True
             response_string = response_generator()
             self.global_vars.update_response_now = False
             # Set event to play the recording audio if required
             if self.global_vars.read_response:
-                self.global_vars.audio_player_var.speech_text_available.set()
-                self.global_vars.last_tts_response = response_string
-                self.global_vars.last_spoken_response = response_string
+                # Response playback will be triggered by update_response_ui
+                # which also updates last_tts_response and last_spoken_response
+                pass
             self.response_textbox.configure(state="normal")
             if response_string:
                 write_in_textbox(self.response_textbox, response_string)
@@ -848,6 +876,7 @@ def update_response_ui(responder: gr.GPTResponder,
 
     if global_vars_module is None:
         global_vars_module = TranscriptionGlobals()
+    logger.info("update_response_ui invoked")
     response = None
 
     # global_vars_module.responder.enabled --> This is continous response mode from LLM
@@ -871,6 +900,7 @@ def update_response_ui(responder: gr.GPTResponder,
             global_vars_module.last_tts_response = response
             global_vars_module.last_spoken_response = response
             global_vars_module.set_read_response(True)
+            logger.info("update_response_ui triggering playback event")
             global_vars_module.audio_player_var.speech_text_available.set()
             responder.streaming_complete.clear()
 

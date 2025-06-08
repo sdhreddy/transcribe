@@ -4,10 +4,10 @@ from enum import Enum
 import threading
 # import pprint
 import openai
-import prompts
-import conversation
-import constants
-from db import (
+from . import prompts
+from . import conversation
+from . import constants
+from .db import (
     AppDB as appdb,
     llm_responses as llmrdb,
     summaries as s)

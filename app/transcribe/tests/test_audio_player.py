@@ -29,7 +29,7 @@ class TestAudioPlayer(unittest.TestCase):
         self.audio_player = AudioPlayer(convo=self.convo)
         self.config = {
             'OpenAI': {'response_lang': 'english'},
-            'General': {'tts_speech_rate': 1.5},
+            'General': {'tts_speech_rate': 1.5, 'tts_playback_volume': 0.5},
             'english': 'en'
         }
 
@@ -47,7 +47,7 @@ class TestAudioPlayer(unittest.TestCase):
         mock_popen.side_effect = Exception('ffplay missing')
 
         with self.assertLogs(level='ERROR') as log:
-            self.audio_player.play_audio(speech, lang)
+            self.audio_player.play_audio(speech, lang, response_id='id1')
             self.assertIn('Error when attempting to play audio.', log.output[0])
 
     @patch.object(AudioPlayer, 'play_audio')
@@ -78,7 +78,7 @@ class TestAudioPlayer(unittest.TestCase):
         self.assertFalse(self.audio_player.read_response, 'Read response boolean was not cleared.')
         self.assertEqual(self.convo.context.last_spoken_response, 'initial',
                          'Last spoken response should remain unchanged after playback.')
-        mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5)
+        mock_play_audio.assert_called_once_with(speech="Hello, this is a test.", lang='en', rate=1.5, volume=0.5, response_id='Hello, this is a test.')
         self.audio_player.stop_loop = True
 
     def test_get_language_code(self):

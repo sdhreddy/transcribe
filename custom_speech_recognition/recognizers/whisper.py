@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Optional
+
 import os
 from io import BytesIO
 
@@ -12,7 +14,7 @@ def recognize_whisper_api(
     audio_data: "AudioData",
     *,
     model: str = "whisper-1",
-    api_key: str | None = None,
+    api_key: Optional[str] = None,
 ):
     """
     Perform speech recognition on ``audio_data`` (``AudioData`` instance), using OpenAI Whisper API.
