@@ -66,7 +66,9 @@ class AudioPlayer:
                 if self.playing:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
+
                 logger.info("Audio playback starting")
+
                 self.playing = True
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
@@ -125,14 +127,37 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
+
                     current_volume = self.tts_volume
                     logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+
+
+
                     self.play_audio(
                         speech=final_speech,
                         lang=lang_code,
                         rate=rate,
                         volume=current_volume,
                     )
+
+
+
+                    self.play_audio(speech=final_speech, lang=lang_code,
+                                   rate=rate, volume=volume)
+
+
+
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)
                     sp_rec.enabled = prev_sp_state
