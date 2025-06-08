@@ -1,6 +1,11 @@
 import unittest
 from unittest.mock import patch, MagicMock
+
 import time
+
+import time
+
+
 import sys
 import os
 sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
@@ -36,11 +41,19 @@ class TestFFplayVolume(unittest.TestCase):
         with patch('subprocess.Popen', side_effect=fake_popen):
             player = AudioPlayer(convo=convo)
             for volume in [0.2, 0.5, 0.8]:
+
                 player.play_audio('hi', 'en', rate=1.0, volume=volume, response_id=str(volume))
                 cmd = captured_cmds[-1]
                 joined = ' '.join(cmd)
                 self.assertIn(f'volume={volume}', joined)
                 time.sleep(1.1)
+
+
+                player.play_audio('hi', 'en', rate=1.0, volume=volume)
+                cmd = captured_cmds[-1]
+                joined = ' '.join(cmd)
+                self.assertIn(f'volume={volume}', joined)
+
 
 if __name__ == '__main__':
     unittest.main()
