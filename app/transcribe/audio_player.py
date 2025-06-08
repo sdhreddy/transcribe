@@ -11,8 +11,8 @@ import subprocess
 import datetime
 import playsound
 import gtts
-from conversation import Conversation
-import constants
+from .conversation import Conversation
+from . import constants
 from tsutils import app_logging as al
 from tsutils.language import LANGUAGES_DICT
 from typing import Optional
@@ -70,6 +70,7 @@ class AudioPlayer:
     ) -> None:
 
 
+
     def play_audio(self, speech: str, lang: str, rate: float | None = None,
 
                    volume: float | None = None, response_id: str | None = None):
@@ -106,11 +107,13 @@ class AudioPlayer:
 
 
 
+
                 if self.playing:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
 
                 logger.info("Audio playback starting")
+
 
 
 
@@ -141,6 +144,9 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
                 self.playing = False
+
+                self.last_playback_end = time.time()
+
 
                 self.last_playback_end = time.time()
 
@@ -208,6 +214,10 @@ class AudioPlayer:
 
 
                     current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
 
 
 
@@ -218,6 +228,9 @@ class AudioPlayer:
                         lang=lang_code,
                         rate=rate,
                         volume=current_volume,
+
+                        response_id=final_speech,
+                    )
 
                         response_id=final_speech,
                     )

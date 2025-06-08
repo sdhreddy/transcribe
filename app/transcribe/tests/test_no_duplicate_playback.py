@@ -39,6 +39,10 @@ class TestNoDuplicatePlayback(unittest.TestCase):
             t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
             t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
 
+
+            t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+            t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
+
             t1 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
             t2 = threading.Thread(target=player.play_audio, args=('hi', 'en'), kwargs={'rate':1.0, 'volume':0.5, 'response_id':'1'})
 

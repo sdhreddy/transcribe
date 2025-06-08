@@ -41,7 +41,11 @@ class TestSinglePlayback(unittest.TestCase):
 
             player.play_audio('hi', 'en', rate=1.0, volume=0.5, response_id='s')
 
+
+            player.play_audio('hi', 'en', rate=1.0, volume=0.5, response_id='s')
+
             player.play_audio('hi', 'en', rate=1.0, volume=0.5)
+
 
 
             self.assertEqual(len(popen_calls), 1)

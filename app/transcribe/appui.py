@@ -6,11 +6,11 @@ import webbrowser
 import pyperclip
 import customtkinter as ctk
 from tktooltip import ToolTip
-from audio_transcriber import AudioTranscriber
-import prompts
-from global_vars import TranscriptionGlobals, T_GLOBALS
-import constants
-import gpt_responder as gr
+from .audio_transcriber import AudioTranscriber
+from . import prompts
+from .global_vars import TranscriptionGlobals, T_GLOBALS
+from . import constants
+from . import gpt_responder as gr
 from tsutils.language import LANGUAGES_DICT
 from tsutils import utilities
 from tsutils import app_logging as al
@@ -534,6 +534,10 @@ class AppUI(ctk.CTk):
 
 
             self.global_vars.audio_player_var.reset_played_responses()
+
+
+            self.global_vars.audio_player_var.reset_played_responses()
+
 
 
             self.global_vars.update_response_now = True
