@@ -525,6 +525,7 @@ class AppUI(ctk.CTk):
         """Helper method to update response UI in a separate thread
         """
         try:
+            logger.info("update_response_ui_threaded invoked")
             self.global_vars.update_response_now = True
             response_string = response_generator()
             self.global_vars.update_response_now = False
@@ -874,6 +875,7 @@ def update_response_ui(responder: gr.GPTResponder,
 
     if global_vars_module is None:
         global_vars_module = TranscriptionGlobals()
+    logger.info("update_response_ui invoked")
     response = None
 
     # global_vars_module.responder.enabled --> This is continous response mode from LLM
@@ -897,6 +899,7 @@ def update_response_ui(responder: gr.GPTResponder,
             global_vars_module.last_tts_response = response
             global_vars_module.last_spoken_response = response
             global_vars_module.set_read_response(True)
+            logger.info("update_response_ui triggering playback event")
             global_vars_module.audio_player_var.speech_text_available.set()
             responder.streaming_complete.clear()
 

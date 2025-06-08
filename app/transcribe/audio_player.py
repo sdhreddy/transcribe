@@ -55,7 +55,7 @@ class AudioPlayer:
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
         """
-        logger.info(f'{self.__class__.__name__} - Playing audio')  # pylint: disable=W1203
+        logger.info(f'{self.__class__.__name__} - play_audio called')  # pylint: disable=W1203
         try:
             audio_obj = gtts.gTTS(speech, lang=lang)
             temp_audio_file = tempfile.mkstemp(dir=self.temp_dir, suffix='.mp3')
@@ -66,6 +66,9 @@ class AudioPlayer:
                 if self.playing:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
+
+                logger.info("Audio playback starting")
+
                 self.playing = True
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
@@ -106,6 +109,7 @@ class AudioPlayer:
 
         while self.stop_loop is False:
             if self.speech_text_available.is_set() and self.read_response:
+                logger.info("play_audio_loop triggered by speech_text_available")
                 self.speech_text_available.clear()
                 speech = self._get_speech_text()
                 final_speech = self._process_speech_text(speech)
@@ -133,6 +137,11 @@ class AudioPlayer:
 
 
                     current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+
 
 
                     self.play_audio(
@@ -141,6 +150,7 @@ class AudioPlayer:
                         rate=rate,
                         volume=current_volume,
                     )
+
 
 
                     self.play_audio(speech=final_speech, lang=lang_code,
@@ -153,6 +163,7 @@ class AudioPlayer:
                     sp_rec.enabled = prev_sp_state
                     gv = self.conversation.context
                     gv.last_playback_end = datetime.datetime.utcnow()
+                    logger.info("Audio playback finished")
 
                     # Reset last_spoken_response so any queued text is cleared
                     # after playback completes. update_response_ui will
