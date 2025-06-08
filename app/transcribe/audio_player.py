@@ -119,6 +119,11 @@ class AudioPlayer:
                 try:
 
                     current_volume = self.tts_volume
+                    logger.info("Playing audio response once")
+
+
+                    current_volume = self.tts_volume
+
                     self.play_audio(
                         speech=final_speech,
                         lang=lang_code,
@@ -126,8 +131,10 @@ class AudioPlayer:
                         volume=current_volume,
                     )
 
+
                     self.play_audio(speech=final_speech, lang=lang_code,
                                    rate=rate, volume=volume)
+
 
                 finally:
                     time.sleep(constants.SPEAKER_REENABLE_DELAY_SECONDS)

@@ -530,9 +530,9 @@ class AppUI(ctk.CTk):
             self.global_vars.update_response_now = False
             # Set event to play the recording audio if required
             if self.global_vars.read_response:
-                self.global_vars.audio_player_var.speech_text_available.set()
-                self.global_vars.last_tts_response = response_string
-                self.global_vars.last_spoken_response = response_string
+                # Response playback will be triggered by update_response_ui
+                # which also updates last_tts_response and last_spoken_response
+                pass
             self.response_textbox.configure(state="normal")
             if response_string:
                 write_in_textbox(self.response_textbox, response_string)
