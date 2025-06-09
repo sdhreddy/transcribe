@@ -99,8 +99,11 @@ def main():
     print("READY")
 
     # Set the response lang in STT Model.
+    print("Setting STT language...")
     global_vars.transcriber.stt_model.set_lang(config['OpenAI']['audio_lang'])
+    print("Updating initial transcripts...")
     aui.update_initial_transcripts()
+    print("Starting GUI mainloop...")
     aui.start()
     log_listener.stop()
 

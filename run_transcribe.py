@@ -31,11 +31,16 @@ def main():
     
     # Run the main application
     try:
+        # Use virtual environment python if available
+        venv_python = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'venv', 'bin', 'python3')
+        python_exe = venv_python if os.path.exists(venv_python) else sys.executable
+        print(f"Using Python: {python_exe}")
+        
         # Redirect stderr to suppress ALSA warnings while keeping Python errors
         with open('/dev/null', 'w') as devnull:
             # Keep stdout for app output, redirect only ALSA stderr
             result = subprocess.run([
-                sys.executable, 'main.py'
+                python_exe, 'main.py'
             ], stderr=subprocess.PIPE, stdout=sys.stdout, text=True)
             
             # Only show stderr if it contains Python errors (not ALSA warnings)
