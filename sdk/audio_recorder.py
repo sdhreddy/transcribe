@@ -293,39 +293,73 @@ class SpeakerRecorder(BaseRecorder):
     def __init__(self, source_name='Speaker', audio_file_name: str = None):
         logger.info(SpeakerRecorder.__name__)
         pa = pyaudio.PyAudio()
+        
+        # Check if we're on Windows (WASAPI available) or Linux/WSL
         try:
             wasapi_inf = pa.get_host_api_info_by_type(pyaudio.paWASAPI)
             self.device_index = wasapi_inf["defaultOutputDevice"]
             default_speakers = pa.get_device_info_by_index(self.device_index)
+            is_windows = True
         except Exception:
-            _, outputs = list_audio_devices()
-            if outputs:
-                self.device_index = outputs[0][0]
-                default_speakers = pa.get_device_info_by_index(self.device_index)
-                logging.warning(
-                    "No default output device. Falling back to: %s",
-                    default_speakers["name"],
-                )
-            else:
-                pa.terminate()
-                raise RuntimeError("No output audio devices found.")
-
-        if not default_speakers.get("isLoopbackDevice"):
-            for loopback in pa.get_loopback_device_info_generator():
-                if default_speakers["name"] in loopback["name"]:
-                    default_speakers = loopback
+            # On Linux/WSL, try to find a suitable loopback device
+            is_windows = False
+            default_speakers = None
+            
+            # Look for PulseAudio monitor devices (Linux loopback equivalent)
+            for i in range(pa.get_device_count()):
+                device_info = pa.get_device_info_by_index(i)
+                device_name = device_info.get('name', '').lower()
+                
+                # Look for monitor devices which are Linux equivalent of loopback
+                if ('monitor' in device_name or 'loopback' in device_name) and \
+                   device_info.get('maxInputChannels', 0) > 0:
+                    default_speakers = device_info
+                    self.device_index = i
+                    print(f"[INFO] Found monitor device for speaker recording: {device_info['name']}")
                     break
-            else:
-                print("[ERROR] No loopback device found.")
+            
+            if default_speakers is None:
+                # Fallback to any output device with input capabilities
+                _, outputs = list_audio_devices()
+                if outputs:
+                    self.device_index = outputs[0][0]
+                    default_speakers = pa.get_device_info_by_index(self.device_index)
+                    logging.warning(
+                        "No monitor device found. Using fallback speaker device: %s. "
+                        "Speaker recording may not work properly on WSL/Linux without PulseAudio monitor.",
+                        default_speakers["name"],
+                    )
+                else:
+                    pa.terminate()
+                    raise RuntimeError("No suitable audio devices found for speaker recording.")
+
+        # Only try Windows-specific loopback if on Windows
+        if is_windows and not default_speakers.get("isLoopbackDevice"):
+            try:
+                for loopback in pa.get_loopback_device_info_generator():
+                    if default_speakers["name"] in loopback["name"]:
+                        default_speakers = loopback
+                        break
+                else:
+                    print("[ERROR] No loopback device found.")
+            except AttributeError:
+                # get_loopback_device_info_generator doesn't exist on this platform
+                print("[WARNING] Loopback device enumeration not available on this platform.")
+                
         self.device_info = default_speakers
         pa.terminate()
 
+        # Set up appropriate parameters based on device capabilities
+        max_input_channels = default_speakers.get("maxInputChannels", 1)
+        if max_input_channels == 0:
+            max_input_channels = 1  # Fallback for devices reporting 0 input channels
+            
         source = sr.Microphone(
             speaker=True,
             device_index=default_speakers["index"],
             sample_rate=int(default_speakers["defaultSampleRate"]),
             chunk_size=pyaudio.get_sample_size(pyaudio.paInt16),
-            channels=default_speakers["maxInputChannels"],
+            channels=min(max_input_channels, 2),  # Limit to stereo max
         )
 
         super().__init__(source=source, source_name=source_name, audio_file_name=audio_file_name)
@@ -347,13 +381,24 @@ class SpeakerRecorder(BaseRecorder):
         self.device_index = index
         speakers = pa.get_device_info_by_index(self.device_index)
 
-        if not speakers.get("isLoopbackDevice"):
-            for loopback in pa.get_loopback_device_info_generator():
-                if speakers["name"] in loopback["name"]:
-                    speakers = loopback
-                    break
-            else:
-                print("[ERROR] No loopback device found.")
+        # Check for Windows loopback only if on Windows
+        try:
+            # Test if we have WASAPI (Windows)
+            pa.get_host_api_info_by_type(pyaudio.paWASAPI)
+            is_windows = True
+        except Exception:
+            is_windows = False
+
+        if is_windows and not speakers.get("isLoopbackDevice"):
+            try:
+                for loopback in pa.get_loopback_device_info_generator():
+                    if speakers["name"] in loopback["name"]:
+                        speakers = loopback
+                        break
+                else:
+                    print("[ERROR] No loopback device found.")
+            except AttributeError:
+                print("[WARNING] Loopback device enumeration not available on this platform.")
         pa.terminate()
 
         # Stop the current stream
@@ -362,11 +407,15 @@ class SpeakerRecorder(BaseRecorder):
             time.sleep(2)
 
         self.device_info = speakers
+        max_input_channels = speakers.get("maxInputChannels", 1)
+        if max_input_channels == 0:
+            max_input_channels = 1
+            
         self.source = sr.Microphone(speaker=True,
                                     device_index=speakers["index"],
                                     sample_rate=int(speakers["defaultSampleRate"]),
                                     chunk_size=pyaudio.get_sample_size(pyaudio.paInt16),
-                                    channels=speakers["maxInputChannels"])
+                                    channels=min(max_input_channels, 2))
 
         print(f'[INFO] Listening to sound from Speaker: {self.get_name()}')
         # self.adjust_for_noise("Speaker",

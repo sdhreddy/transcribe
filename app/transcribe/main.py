@@ -17,6 +17,21 @@ def main():
     args = create_args()
 
     config = configuration.Config().data
+    
+    # Debug: Print OpenAI API key being used
+    print(f"DEBUG: OpenAI API key loaded: {config['OpenAI']['api_key'][:20]}...")
+    
+    # Print available audio devices for debugging
+    from sdk import audio_recorder as ar
+    try:
+        print("\n=== Available Audio Devices ===")
+        inputs, outputs = ar.list_audio_devices()
+        print(f"Input devices: {inputs}")
+        print(f"Output devices: {outputs}")
+        print("===============================\n")
+    except Exception as e:
+        print(f"[WARNING] Could not list audio devices: {e}")
+    
     au.start_ffmpeg()
 
     # Initiate global variables

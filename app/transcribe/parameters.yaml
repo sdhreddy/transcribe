@@ -1,5 +1,5 @@
 OpenAI:
-  api_key: "REPLACE_WITH_REAL_KEY"
+  api_key: "YOUR_OPENAI_API_KEY"
   base_url: "https://api.openai.com/v1"
 # Possible model values
 # gpt-4o, gpt-4o-2024-05-13

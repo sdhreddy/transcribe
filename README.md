@@ -290,16 +290,48 @@ System packages: python3-venv, python3-tk, portaudio19-dev, ffmpeg, etc.
 ## WSL/Ubuntu Audio Setup
 
 If running Transcribe under WSL/Ubuntu with WSLg, audio is forwarded automatically.
-Run the helper script to ensure PulseAudio is available:
+Run the ARM64/WSL setup script to configure audio optimally:
 
-1. ```bash
-   chmod +x scripts/setup_wsl_audio.sh
-   ./scripts/setup_wsl_audio.sh
+1. **Quick Setup (ARM64/WSL optimized):**
+   ```bash
+   chmod +x contrib/wsl-audio/setup_arm_wsl.sh
+   ./contrib/wsl-audio/setup_arm_wsl.sh
    ```
-2. Start Transcribe normally:
+
+2. **Manual ALSA Configuration (optional):**
+   To suppress ALSA warnings without hiding errors:
+   ```bash
+   cp contrib/wsl-audio/asoundrc ~/.asoundrc
+   ```
+
+3. **Start Transcribe:**
    ```bash
    cd app/transcribe && python main.py
    ```
-After setup, microphone recording should work inside WSL.
+
+### ARM64/WSL Improvements (arm64-support branch)
+
+The `arm64-support` branch includes several WSL/ARM64 specific improvements:
+
+- **Enhanced Speaker Recording**: Fixed PyAudio loopback issues on Linux/WSL by detecting PulseAudio monitor devices
+- **Improved Device Selection**: Automatic fallback when specified audio devices are unavailable 
+- **ALSA Warning Suppression**: Clean ALSA configuration to silence common WSL audio warnings
+- **Better Error Handling**: Graceful degradation when audio features aren't available
+- **Device Debugging**: Startup output shows available audio devices for troubleshooting
+
+### Configuration Hierarchy
+
+Transcribe uses this configuration precedence (highest to lowest priority):
+1. `app/transcribe/override.yaml` - User overrides (recommended for API keys)
+2. `app/transcribe/parameters.yaml` - Default configuration
+3. Environment variables (OpenAI SDK may check `OPENAI_API_KEY`)
+
+For production use, store your OpenAI API key in `override.yaml`:
+```yaml
+OpenAI:
+  api_key: "sk-proj-your-key-here"
+```
+
+After setup, microphone and speaker recording should work inside WSL.
 
 
