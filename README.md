@@ -306,7 +306,11 @@ Run the ARM64/WSL setup script to configure audio optimally:
 
 3. **Start Transcribe:**
    ```bash
-   cd app/transcribe && python main.py
+   # Method 1: Use the clean wrapper (recommended for WSL)
+   python3 run_transcribe.py
+   
+   # Method 2: Direct execution
+   cd app/transcribe && python3 main.py
    ```
 
 ### ARM64/WSL Improvements (arm64-support branch)

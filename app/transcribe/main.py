@@ -21,6 +21,11 @@ def main():
     # Debug: Print OpenAI API key being used
     print(f"DEBUG: OpenAI API key loaded: {config['OpenAI']['api_key'][:20]}...")
     
+    # Set environment variable to suppress ALSA warnings
+    import os
+    os.environ['ALSA_PCM_CARD'] = 'default'
+    os.environ['ALSA_PCM_DEVICE'] = '0'
+    
     # Print available audio devices for debugging
     from sdk import audio_recorder as ar
     try:
