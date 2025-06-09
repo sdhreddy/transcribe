@@ -16,13 +16,11 @@ from tsutils import utilities
 from tsutils import app_logging as al
 from tsutils import configuration
 from .uicomp.selectable_text import SelectableText
-import numpy as np
 from PIL import Image
 from wordcloud import WordCloud
-import matplotlib.pyplot as plt
 from io import BytesIO
 from tkinter import *
-from PIL import ImageTk, Image
+from PIL import ImageTk
 import re
 
 
@@ -526,18 +524,6 @@ class AppUI(ctk.CTk):
         """
         try:
             logger.info("update_response_ui_threaded invoked")
-
-            self.global_vars.audio_player_var.reset_played_responses()
-
-
-            self.global_vars.audio_player_var.reset_played_responses()
-
-
-            self.global_vars.audio_player_var.reset_played_responses()
-
-
-            self.global_vars.audio_player_var.reset_played_responses()
-
 
             self.global_vars.audio_player_var.reset_played_responses()
 

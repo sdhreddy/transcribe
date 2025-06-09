@@ -1,3 +1,4 @@
+import os
 import sys
 import time
 import atexit
@@ -9,9 +10,6 @@ if __package__ is None:
     sys.path.append(repo_root)
     __package__ = "app.transcribe"
 
-
-import os
-
 if __package__ in (None, "", "__main__"):
     sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
     __package__ = 'app.transcribe'
@@ -21,13 +19,6 @@ from . import app_utils as au
 from .args import create_args, update_args_config, handle_args_batch_tasks
 from .global_vars import T_GLOBALS
 from .appui import AppUI
-
-import app_utils as au
-from args import create_args, update_args_config, handle_args_batch_tasks
-from global_vars import T_GLOBALS
-from appui import AppUI
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 from tsutils import configuration  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413

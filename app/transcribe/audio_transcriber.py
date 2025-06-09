@@ -22,14 +22,6 @@ from difflib import SequenceMatcher
 from . import conversation  # noqa: E402 pylint: disable=C0413
 from . import constants  # noqa: E402 pylint: disable=C0413
 
-
-from . import conversation  # noqa: E402 pylint: disable=C0413
-from . import constants  # noqa: E402 pylint: disable=C0413
-
-import conversation  # noqa: E402 pylint: disable=C0413
-import constants  # noqa: E402 pylint: disable=C0413
-
-import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import custom_speech_recognition as sr  # noqa: E402 pylint: disable=C0413
 from tsutils import app_logging as al  # noqa: E402 pylint: disable=C0413

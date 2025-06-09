@@ -9,7 +9,6 @@ import tempfile
 import threading
 import subprocess
 import datetime
-import playsound
 import gtts
 from .conversation import Conversation
 from . import constants
@@ -67,18 +66,6 @@ class AudioPlayer:
         volume: Optional[float] = None,
         response_id: Optional[str] = None,
     ) -> None:
-
-
-
-
-    def play_audio(self, speech: str, lang: str, rate: float | None = None,
-
-                   volume: float | None = None, response_id: str | None = None):
-
-                   volume: float | None = None):
-
-
-
         """Play text as audio.
         This is a blocking method and will return when audio playback is complete.
         For large audio text, this could take several minutes.
@@ -105,21 +92,6 @@ class AudioPlayer:
                     logger.warning("Audio already playing, skipping redundant call.")
                     return
                 logger.info("Audio playback starting")
-
-
-
-
-
-                if self.playing:
-                    logger.warning("Audio already playing, skipping redundant call.")
-                    return
-
-                logger.info("Audio playback starting")
-
-
-
-
-
                 self.playing = True
                 self.stop_current_playback()
                 cmd = ['ffplay', '-nodisp', '-autoexit', '-loglevel', 'quiet']
@@ -147,19 +119,6 @@ class AudioPlayer:
             with self.play_lock:
                 self.stop_current_playback()
                 self.playing = False
-
-                self.last_playback_end = time.time()
-
-
-                self.last_playback_end = time.time()
-
-
-                self.last_playback_end = time.time()
-
-
-                self.last_playback_end = time.time()
-
-
                 self.last_playback_end = time.time()
 
 
@@ -194,74 +153,16 @@ class AudioPlayer:
                 prev_sp_state = sp_rec.enabled
                 sp_rec.enabled = False
                 try:
-
                     current_volume = self.tts_volume
                     logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-                    logger.info("Playing audio response once")
-
-
-                    current_volume = self.tts_volume
-
-
-
-
+                    
                     self.play_audio(
                         speech=final_speech,
                         lang=lang_code,
                         rate=rate,
                         volume=current_volume,
-
                         response_id=final_speech,
                     )
-
-
-                        response_id=final_speech,
-                    )
-
-                        response_id=final_speech,
-                    )
-
-
-                        response_id=final_speech,
-                    )
-
-
-                        response_id=final_speech,
-                    )
-
-                    )
-
-
-
-                    self.play_audio(speech=final_speech, lang=lang_code,
-                                   rate=rate, volume=volume)
 
 
 
