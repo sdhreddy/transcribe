@@ -10,6 +10,7 @@ pyaudio>=0.2.11
 soundfile
 gtts
 simpleaudio>=1.0.4
+pygame>=2.1.0
 deepgram-sdk==3.2.5
 # Use 117 to build for CPU only
 # --extra-index-url https://download.pytorch.org/whl/cu117

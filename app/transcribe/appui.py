@@ -91,14 +91,28 @@ class AppUI(ctk.CTk):
         """Create all UI components
         """
         ctk.set_appearance_mode("dark")
-        ctk.set_default_color_theme("dark-blue")
+        ctk.set_default_color_theme("blue")
         self.title("Transcribe")
         self.configure(bg='#252422')
-        self.geometry("1200x800")
+        self.geometry("1200x900")
+        self.resizable(True, True)
+        self.minsize(1000, 800)
+        
+        # Force window to be resizable - Linux/WSL specific
+        self.wm_resizable(True, True)
+        self.attributes('-zoomed', False)  # Ensure not maximized
+        
+        # Additional Linux/WSL compatibility
+        try:
+            self.wm_attributes('-type', 'normal')
+            # Force update to ensure window manager recognizes changes
+            self.update_idletasks()
+        except:
+            pass
 
         # Frame for the main content
         self.main_frame = ctk.CTkFrame(self)
-        self.main_frame.pack(fill="both", expand=True)
+        self.main_frame.grid(row=0, column=0, sticky="nsew", padx=5, pady=5)
 
         self.create_menus()
 
@@ -120,37 +134,37 @@ class AppUI(ctk.CTk):
         self.response_textbox.pack(fill="both", expand=True)
         self.response_textbox.insert("0.0", prompts.INITIAL_RESPONSE)
 
-        # Bottom Frame for buttons
-        self.bottom_frame = ctk.CTkFrame(self, border_color="white", border_width=2)
-        self.bottom_frame.pack(side="bottom", fill="both", pady=10)
+        # Create bottom frame - expandable to show all controls
+        self.bottom_frame = ctk.CTkFrame(self, border_color="#639cdc", border_width=2)
+        self.bottom_frame.grid(row=1, column=0, sticky="ew", pady=5, padx=5)
 
         response_enabled = bool(config['General']['continuous_response'])
         b_text = "Suggest Responses Continuously" if not response_enabled else "Do Not Suggest Responses Continuously"
-        self.continuous_response_button = ctk.CTkButton(self.bottom_frame, text=b_text)
-        self.continuous_response_button.grid(row=0, column=4, padx=10, pady=3, sticky="nsew")
+        self.continuous_response_button = ctk.CTkButton(self.bottom_frame, text=b_text, height=28)
+        self.continuous_response_button.grid(row=0, column=4, padx=5, pady=2, sticky="ew")
         self.continuous_response_button.configure(command=self.freeze_unfreeze)
 
-        self.response_now_button = ctk.CTkButton(self.bottom_frame, text="Suggest Response Now")
-        self.response_now_button.grid(row=1, column=4, padx=10, pady=3, sticky="nsew")
+        self.response_now_button = ctk.CTkButton(self.bottom_frame, text="Suggest Response Now", height=28)
+        self.response_now_button.grid(row=1, column=4, padx=5, pady=2, sticky="ew")
         self.response_now_button.configure(command=self.get_response_now)
 
-        self.read_response_now_button = ctk.CTkButton(self.bottom_frame, text="Suggest Response and Read")
-        self.read_response_now_button.grid(row=2, column=4, padx=10, pady=3, sticky="nsew")
+        self.read_response_now_button = ctk.CTkButton(self.bottom_frame, text="Suggest Response and Read", height=28)
+        self.read_response_now_button.grid(row=2, column=4, padx=5, pady=2, sticky="ew")
         self.read_response_now_button.configure(command=self.update_response_ui_and_read_now)
 
-        self.summarize_button = ctk.CTkButton(self.bottom_frame, text="Summarize")
-        self.summarize_button.grid(row=3, column=4, padx=10, pady=3, sticky="nsew")
+        self.summarize_button = ctk.CTkButton(self.bottom_frame, text="Summarize", height=28)
+        self.summarize_button.grid(row=3, column=4, padx=5, pady=2, sticky="ew")
         self.summarize_button.configure(command=self.summarize)
 
         # word cloud button
-        self.word_cloud_button = ctk.CTkButton(self.bottom_frame, text="Display Word Cloud")
-        self.word_cloud_button.grid(row=4, column=4, padx=10, pady=3, sticky="nsew")
+        self.word_cloud_button = ctk.CTkButton(self.bottom_frame, text="Display Word Cloud", height=28)
+        self.word_cloud_button.grid(row=4, column=4, padx=5, pady=2, sticky="ew")
         self.word_cloud_button.configure(command=self.word_cloud)
 
         # Continuous read aloud switch
         read_enabled = bool(config['General'].get('continuous_read', False))
-        self.continuous_read_button = ctk.CTkSwitch(self.bottom_frame, text="Read Responses Continuously")
-        self.continuous_read_button.grid(row=5, column=4, padx=10, pady=3, sticky="nsew")
+        self.continuous_read_button = ctk.CTkSwitch(self.bottom_frame, text="Read Responses Continuously", height=28)
+        self.continuous_read_button.grid(row=5, column=4, padx=5, pady=2, sticky="ew")
         if read_enabled:
             self.continuous_read_button.select()
         ToolTip(self.continuous_read_button,
@@ -162,11 +176,11 @@ class AppUI(ctk.CTk):
         # Continuous LLM Response label, and slider
         self.update_interval_slider_label = ctk.CTkLabel(self.bottom_frame, text="", font=("Arial", 12),
                                                          text_color="#FFFCF2")
-        self.update_interval_slider_label.grid(row=0, column=0, columnspan=4, padx=10, pady=3, sticky="nsew")
-        self.update_interval_slider = ctk.CTkSlider(self.bottom_frame, from_=1, to=30, width=300,  # height=5,
+        self.update_interval_slider_label.grid(row=0, column=0, columnspan=4, padx=5, pady=1, sticky="ew")
+        self.update_interval_slider = ctk.CTkSlider(self.bottom_frame, from_=1, to=30, width=300, height=20,
                                                     number_of_steps=29)
         self.update_interval_slider.set(config['General']['llm_response_interval'])
-        self.update_interval_slider.grid(row=1, column=0, columnspan=4, padx=10, pady=3, sticky="nsew")
+        self.update_interval_slider.grid(row=1, column=0, columnspan=4, padx=5, pady=1, sticky="ew")
         self.update_interval_slider.configure(command=self.update_interval_slider_value)
 
         label_text = f'LLM Response interval: {int(self.update_interval_slider.get())} seconds'
@@ -176,37 +190,48 @@ class AppUI(ctk.CTk):
         audio_lang_label = ctk.CTkLabel(self.bottom_frame, text="Audio Lang: ",
                                         font=("Arial", 12),
                                         text_color="#FFFCF2")
-        audio_lang_label.grid(row=2, column=0, padx=10, pady=3, sticky='nw')
+        audio_lang_label.grid(row=2, column=0, padx=10, pady=2, sticky='nw')
 
         audio_lang = config['OpenAI']['audio_lang']
         self.audio_lang_combobox = ctk.CTkOptionMenu(self.bottom_frame, width=15, values=list(LANGUAGES_DICT.values()))
         self.audio_lang_combobox.set(audio_lang)
-        self.audio_lang_combobox.grid(row=2, column=1, ipadx=60, padx=10, pady=3, sticky="ne")
+        self.audio_lang_combobox.grid(row=2, column=1, ipadx=60, padx=10, pady=2, sticky="ne")
         self.audio_lang_combobox.configure(command=self.set_audio_language)
 
         # LLM Response language selection label, dropdown
         response_lang_label = ctk.CTkLabel(self.bottom_frame,
                                            text="Response Lang: ",
                                            font=("Arial", 12), text_color="#FFFCF2")
-        response_lang_label.grid(row=2, column=2, padx=10, pady=3, sticky="nw")
+        response_lang_label.grid(row=2, column=2, padx=10, pady=2, sticky="nw")
 
         response_lang = config['OpenAI']['response_lang']
         self.response_lang_combobox = ctk.CTkOptionMenu(self.bottom_frame, width=15,
                                                         values=list(LANGUAGES_DICT.values()))
         self.response_lang_combobox.set(response_lang)
-        self.response_lang_combobox.grid(row=2, column=3, ipadx=60, padx=10, pady=3, sticky="ne")
+        self.response_lang_combobox.grid(row=2, column=3, ipadx=60, padx=10, pady=2, sticky="ne")
         self.response_lang_combobox.configure(command=self.set_response_language)
 
         self.github_link = ctk.CTkLabel(self.bottom_frame, text="Star the Github Repo",
                                         text_color="#639cdc", cursor="hand2")
-        self.github_link.grid(row=3, column=0, padx=10, pady=3, sticky="wn")
+        self.github_link.grid(row=3, column=0, padx=10, pady=2, sticky="wn")
         self.github_link.bind('<Button-1>', lambda e:
                               self.open_link('https://github.com/vivekuppal/transcribe?referer=desktop'))
 
         self.issue_link = ctk.CTkLabel(self.bottom_frame, text="Report an issue", text_color="#639cdc", cursor="hand2")
-        self.issue_link.grid(row=3, column=1, padx=10, pady=3, sticky="wn")
+        self.issue_link.grid(row=3, column=1, padx=10, pady=2, sticky="wn")
         self.issue_link.bind('<Button-1>', lambda e: self.open_link(
             'https://github.com/vivekuppal/transcribe/issues/new?referer=desktop'))
+        
+        # Add speaker and microphone control switches
+        self.speaker_switch = ctk.CTkSwitch(self.bottom_frame, text="Speaker Input", height=24,
+                                           command=self.toggle_speaker_from_switch)
+        self.speaker_switch.grid(row=4, column=0, columnspan=2, padx=10, pady=2, sticky="w")
+        self.speaker_switch.select()  # On by default
+        
+        self.mic_switch = ctk.CTkSwitch(self.bottom_frame, text="Microphone Input", height=24,
+                                       command=self.toggle_mic_from_switch)
+        self.mic_switch.grid(row=4, column=2, columnspan=2, padx=10, pady=2, sticky="w")
+        self.mic_switch.select()  # On by default
 
         # Create right click menu for transcript textbox.
         self.transcript_text.add_right_click_menu(label="Generate response for selected text",
@@ -250,12 +275,17 @@ class AppUI(ctk.CTk):
                     delay=0.01, follow=True, parent_kwargs={"padx": 3, "pady": 3},
                     padx=7, pady=7)
 
-        # self.grid_rowconfigure(0, weight=100)
-        # self.grid_rowconfigure(1, weight=1)
-        # self.grid_rowconfigure(2, weight=1)
-        # self.grid_rowconfigure(3, weight=1)
-        # self.grid_columnconfigure(0, weight=1)
-        # self.grid_columnconfigure(1, weight=1)
+        # Configure bottom frame grid weights for resizing
+        self.bottom_frame.grid_columnconfigure(0, weight=1)
+        self.bottom_frame.grid_columnconfigure(1, weight=1)
+        self.bottom_frame.grid_columnconfigure(2, weight=1)
+        self.bottom_frame.grid_columnconfigure(3, weight=1)
+        self.bottom_frame.grid_columnconfigure(4, weight=1)
+        
+        # Configure main window grid for proper resizing
+        self.grid_rowconfigure(0, weight=1)  # Main content gets most space
+        self.grid_rowconfigure(1, weight=0)  # Bottom frame gets minimum needed space
+        self.grid_columnconfigure(0, weight=1)
 
 
     def edit_current_line(self):
@@ -369,12 +399,16 @@ class AppUI(ctk.CTk):
 
     def set_audio_device_menus(self, config):
         if config['General']['disable_speaker']:
-            print('[INFO] Disabling Speaker')
+            logger.info('Disabling Speaker')
             self.enable_disable_speaker()
+            if hasattr(self, 'speaker_switch'):
+                self.speaker_switch.deselect()
 
         if config['General']['disable_mic']:
-            print('[INFO] Disabling Microphone')
+            logger.info('Disabling Microphone')
             self.enable_disable_microphone()
+            if hasattr(self, 'mic_switch'):
+                self.mic_switch.deselect()
 
     def copy_to_clipboard(self):
         """Copy transcription text data to clipboard.
@@ -438,9 +472,27 @@ class AppUI(ctk.CTk):
             if self.global_vars.speaker_audio_recorder:
                 self.global_vars.speaker_audio_recorder.enabled = not self.global_vars.speaker_audio_recorder.enabled
                 self.editmenu.entryconfigure(2, label="Disable Speaker" if self.global_vars.speaker_audio_recorder.enabled else "Enable Speaker")
+                # Update switch state
+                if hasattr(self, 'speaker_switch'):
+                    if self.global_vars.speaker_audio_recorder.enabled:
+                        self.speaker_switch.select()
+                    else:
+                        self.speaker_switch.deselect()
                 self.capture_action(f'{"Enabled " if self.global_vars.speaker_audio_recorder.enabled else "Disabled "} speaker input')
         except Exception as e:
             logger.error(f"Error toggling speaker state: {e}")
+    
+    def toggle_speaker_from_switch(self):
+        """Toggle speaker from the switch widget"""
+        try:
+            if self.global_vars.speaker_audio_recorder:
+                # Set state based on switch position
+                new_state = bool(self.speaker_switch.get())
+                self.global_vars.speaker_audio_recorder.enabled = new_state
+                self.editmenu.entryconfigure(2, label="Disable Speaker" if new_state else "Enable Speaker")
+                self.capture_action(f'{"Enabled" if new_state else "Disabled"} speaker input from GUI')
+        except Exception as e:
+            logger.error(f"Error toggling speaker from switch: {e}")
 
     def enable_disable_microphone(self):
         """Toggles the state of microphone
@@ -449,9 +501,27 @@ class AppUI(ctk.CTk):
             if self.global_vars.user_audio_recorder:
                 self.global_vars.user_audio_recorder.enabled = not self.global_vars.user_audio_recorder.enabled
                 self.editmenu.entryconfigure(3, label="Disable Microphone" if self.global_vars.user_audio_recorder.enabled else "Enable Microphone")
+                # Update switch state
+                if hasattr(self, 'mic_switch'):
+                    if self.global_vars.user_audio_recorder.enabled:
+                        self.mic_switch.select()
+                    else:
+                        self.mic_switch.deselect()
                 self.capture_action(f'{"Enabled " if self.global_vars.user_audio_recorder.enabled else "Disabled "} microphone input')
         except Exception as e:
             logger.error(f"Error toggling microphone state: {e}")
+    
+    def toggle_mic_from_switch(self):
+        """Toggle microphone from the switch widget"""
+        try:
+            if self.global_vars.user_audio_recorder:
+                # Set state based on switch position
+                new_state = bool(self.mic_switch.get())
+                self.global_vars.user_audio_recorder.enabled = new_state
+                self.editmenu.entryconfigure(3, label="Disable Microphone" if new_state else "Enable Microphone")
+                self.capture_action(f'{"Enabled" if new_state else "Disabled"} microphone input from GUI')
+        except Exception as e:
+            logger.error(f"Error toggling microphone from switch: {e}")
 
     def update_interval_slider_value(self, slider_value):
         """Update interval slider label to match the slider value
@@ -877,12 +947,16 @@ def update_response_ui(responder: gr.GPTResponder,
         textbox.configure(state="disabled")
         textbox.see("end")
         if global_vars_module.continuous_read:
-            if global_vars_module.real_time_read:
-                if not response.startswith(global_vars_module.last_tts_response):
-                    global_vars_module.last_spoken_response = ""
-                if response != global_vars_module.last_tts_response:
-                    global_vars_module.last_tts_response = response
-            elif (responder.streaming_complete.is_set() and
+            # Check if this is an initial/welcome message we should skip reading
+            skip_reading = response and (
+                "Welcome to Transcribe" in response or 
+                "👋" in response or
+                "Hello, V. You are awesome" in response or
+                "light hearted banter" in response or
+                "light banter" in response
+            )
+            
+            if not skip_reading and (responder.streaming_complete.is_set() and
                   response != global_vars_module.last_spoken_response):
                 global_vars_module.last_tts_response = response
                 global_vars_module.last_spoken_response = response
@@ -895,5 +969,5 @@ def update_response_ui(responder: gr.GPTResponder,
     update_interval_slider_label.configure(text=f'LLM Response interval: '
                                            f'{update_interval} seconds')
 
-    textbox.after(300, update_response_ui, responder, textbox,
+    textbox.after(10, update_response_ui, responder, textbox,
                   update_interval_slider_label, update_interval_slider)

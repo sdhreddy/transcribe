@@ -49,6 +49,7 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
         # We do not need to store transcription in 2 different places.
         # self.transcript_data = {"You": [], "Speaker": []}
         self.transcript_changed_event = threading.Event()
+        self.last_transcript_update_time = None  # Track when transcript was last updated
         self.stt_model = model
         # Same mutex is used for all audio sources. In case locking becomes an issue, can consider
         # using separate mutex for each audio source
@@ -150,6 +151,7 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             if text != '' and text.lower() != 'you':
                 if not (who_spoke == 'Speaker' and self._should_ignore_speaker_transcript(text)):
                     self.update_transcript(who_spoke, text, time_spoken)
+                    self.last_transcript_update_time = datetime.datetime.utcnow()  # Track update time
                     self.transcript_changed_event.set()
 
     def _prune_audio_file(self, results, who_spoke, time_spoken, path):

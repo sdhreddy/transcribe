@@ -158,10 +158,10 @@ class BaseRecorder:
         """Adjust based on noise from surroundings.
         """
         logger.info(BaseRecorder.adjust_for_noise.__name__)
-        print(f"[INFO] Adjusting for ambient noise from {device_name}. {msg}")
+        logger.info(f"Adjusting for ambient noise from {device_name}. {msg}")
         with self.source:
             self.recorder.adjust_for_ambient_noise(self.source)
-        print(f"[INFO] Completed ambient noise adjustment for {device_name}.")
+        logger.info(f"Completed ambient noise adjustment for {device_name}.")
 
     def record_audio(self, audio_queue: queue.Queue):
         """Start recording audion from the stream and add data to queue
@@ -256,7 +256,7 @@ class MicRecorder(BaseRecorder):
 #                               )
 #        self.source = source
 #        super().__init__(source=source, source_name="You")
-#        print(f'[INFO] Listening to sound from Microphone: {self.get_name()} ')
+#        logger.info(f'Listening to sound from Microphone: {self.get_name()}')
         # This line is commented because in case of non default microphone it can occasionally take
         # several minutes to execute, thus delaying the start of the application.
 #        self.adjust_for_noise("Default Mic", "Please make some noise from the Default Mic...")
@@ -283,7 +283,7 @@ class MicRecorder(BaseRecorder):
                                     channels=1
                                     )
 
-        print(f'[INFO] Listening to sound from Microphone: {self.get_name()} ')
+        logger.info(f'Listening to sound from Microphone: {self.get_name()}')
         self.adjust_for_noise("Mic", "Please make some noise from the chosen Mic...")
 
 
@@ -315,7 +315,7 @@ class SpeakerRecorder(BaseRecorder):
                    device_info.get('maxInputChannels', 0) > 0:
                     default_speakers = device_info
                     self.device_index = i
-                    print(f"[INFO] Found monitor device for speaker recording: {device_info['name']}")
+                    logger.info(f"Found monitor device for speaker recording: {device_info['name']}")
                     break
             
             if default_speakers is None:
@@ -341,10 +341,10 @@ class SpeakerRecorder(BaseRecorder):
                         default_speakers = loopback
                         break
                 else:
-                    print("[ERROR] No loopback device found.")
+                    logger.error("No loopback device found.")
             except AttributeError:
                 # get_loopback_device_info_generator doesn't exist on this platform
-                print("[WARNING] Loopback device enumeration not available on this platform.")
+                logger.warning("Loopback device enumeration not available on this platform.")
                 
         self.device_info = default_speakers
         pa.terminate()
@@ -363,7 +363,7 @@ class SpeakerRecorder(BaseRecorder):
         )
 
         super().__init__(source=source, source_name=source_name, audio_file_name=audio_file_name)
-        print(f'[INFO] Listening to sound from Speaker: {self.get_name()} ')
+        logger.info(f'Listening to sound from Speaker: {self.get_name()}')
         # On some devices, speaker adjustment is very slow unless some noise is
         # made from the speakers, though capturing of speaker output is very
         # good in almost all instances I have seen thus far.
@@ -396,9 +396,9 @@ class SpeakerRecorder(BaseRecorder):
                         speakers = loopback
                         break
                 else:
-                    print("[ERROR] No loopback device found.")
+                    logger.error("No loopback device found.")
             except AttributeError:
-                print("[WARNING] Loopback device enumeration not available on this platform.")
+                logger.warning("Loopback device enumeration not available on this platform.")
         pa.terminate()
 
         # Stop the current stream
@@ -417,7 +417,7 @@ class SpeakerRecorder(BaseRecorder):
                                     chunk_size=pyaudio.get_sample_size(pyaudio.paInt16),
                                     channels=min(max_input_channels, 2))
 
-        print(f'[INFO] Listening to sound from Speaker: {self.get_name()}')
+        logger.info(f'Listening to sound from Speaker: {self.get_name()}')
         # self.adjust_for_noise("Speaker",
         #                       f"Please play sound from selected Speakers {self.get_name()}...")
 

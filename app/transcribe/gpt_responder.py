@@ -49,6 +49,7 @@ class GPTResponder:
         self.response_file = file_name
         self.openai_module = openai_module
         self.streaming_complete = threading.Event()
+        self.last_responded_transcript = ""  # Track last transcript we responded to
 
     def summarize(self) -> str:
         """Ping LLM to get a summary of the conversation.
@@ -339,22 +340,31 @@ class GPTResponder:
 
             # Attempt to get responses only if transcript has changed
             if transcriber.transcript_changed_event.is_set():
-                start_time = time.time()
+                # Get current transcript to check for duplicates
+                current_transcript = transcriber.get_transcript()
+                
+                # Only respond if this is a new transcript we haven't responded to
+                if current_transcript != self.last_responded_transcript:
+                    start_time = time.time()
 
-                transcriber.transcript_changed_event.clear()
+                    transcriber.transcript_changed_event.clear()
 
-                # Do processing only if LLM transcription is enabled
-                if self.enabled:
-                    self.generate_response_from_transcript()
+                    # Do processing only if LLM transcription is enabled
+                    if self.enabled:
+                        self.generate_response_from_transcript()
+                        self.last_responded_transcript = current_transcript
 
-                end_time = time.time()  # Measure end time
-                execution_time = end_time - start_time  # Calculate time to execute the function
+                    end_time = time.time()  # Measure end time
+                    execution_time = end_time - start_time  # Calculate time to execute the function
 
-                remaining_time = self.llm_response_interval - execution_time
-                if remaining_time > 0:
-                    # print(f'llm_response_interval: {self.llm_response_interval}, execution time: {execution_time}')
-                    # print(f'Sleeping for a response for duration: {remaining_time}')
-                    time.sleep(remaining_time)
+                    remaining_time = self.llm_response_interval - execution_time
+                    if remaining_time > 0:
+                        # print(f'llm_response_interval: {self.llm_response_interval}, execution time: {execution_time}')
+                        # print(f'Sleeping for a response for duration: {remaining_time}')
+                        time.sleep(remaining_time)
+                else:
+                    # Same transcript - just clear the event
+                    transcriber.transcript_changed_event.clear()
             else:
                 time.sleep(self.llm_response_interval)
 

@@ -48,12 +48,14 @@ WhisperCpp:
 
 General:
   log_file: 'logs/Transcribe.log'
+# TTS speech rate (1.0 is normal speed, 1.5 is faster)
+  tts_speech_rate: 1.5
   # These two parameters are used together.
   # Save LLM response to file if save_llm_response_to_file is Yes
   save_llm_response_to_file: Yes # Possible values are Yes, No
   llm_response_file: 'logs/response.txt'
 # Attempt transcription of the sound file after these number of seconds
-  transcript_audio_duration_seconds: 3
+  transcript_audio_duration_seconds: 5
 # These two parameters are used together.
 # Setting clear_transcript_periodically: yes will clear transcript data at a regular interval
 # clear_transcript_interval_seconds is applicable when clear_transcript_periodically is set to Yes
@@ -86,7 +88,7 @@ General:
   # The interval at which to ping the LLM for response
   llm_response_interval: 10
   # Playback speed for read-aloud responses
-  tts_speech_rate: 1.3
+  tts_speech_rate: 1.5
   # Begin speaking before the full response is displayed
   real_time_read: No
 
