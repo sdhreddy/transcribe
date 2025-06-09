@@ -4,29 +4,11 @@
 # Default PCM device - route to PulseAudio
 pcm.!default {
     type pulse
+    server unix:/mnt/wslg/PulseServer
 }
 
 # Default control device - route to PulseAudio
 ctl.!default {
     type pulse
-}
-
-# Define card 0 to prevent "cannot find card 0" warnings
-pcm.card0 {
-    type pulse
-}
-
-# Define sysdefault to prevent "Unknown PCM sysdefault" warnings
-pcm.sysdefault {
-    type pulse
-}
-
-# JACK compatibility (prevents JACK warnings when not using JACK)
-pcm.jack {
-    type pulse
-}
-
-# Define hw:0 fallback to prevent hardware access warnings
-pcm.hw0 {
-    type pulse
+    server unix:/mnt/wslg/PulseServer
 }

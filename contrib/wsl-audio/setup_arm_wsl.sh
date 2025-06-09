@@ -8,14 +8,27 @@ echo "🔧 Setting up Transcribe for ARM64/WSL2..."
 
 # Create ALSA configuration to suppress warnings
 echo "📢 Configuring ALSA to suppress warnings..."
-if [ ! -f ~/.asoundrc ]; then
-    cp contrib/wsl-audio/asoundrc ~/.asoundrc
-    echo "✅ ALSA configuration installed at ~/.asoundrc"
-else
-    echo "⚠️  ~/.asoundrc already exists. Backup and merge manually if needed:"
-    echo "   cp ~/.asoundrc ~/.asoundrc.backup"
-    echo "   cp contrib/wsl-audio/asoundrc ~/.asoundrc"
+if [ -f ~/.asoundrc ]; then
+    echo "🔄 Backing up existing ~/.asoundrc to ~/.asoundrc.backup"
+    cp ~/.asoundrc ~/.asoundrc.backup
 fi
+
+# Check if WSLg PulseAudio socket exists
+if [ -S /mnt/wslg/PulseServer ]; then
+    echo "🎧 Using WSLg PulseAudio socket"
+    cp contrib/wsl-audio/asoundrc ~/.asoundrc
+else
+    echo "🎧 WSLg socket not found, using simple PulseAudio config"
+    cat > ~/.asoundrc << 'EOF'
+pcm.!default {
+    type pulse
+}
+ctl.!default {
+    type pulse
+}
+EOF
+fi
+echo "✅ ALSA configuration installed at ~/.asoundrc"
 
 # Check if PulseAudio is running
 echo "🔊 Checking PulseAudio status..."
