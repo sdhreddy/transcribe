@@ -35,3 +35,6 @@ my_voice.npy
 voice_sample*.wav
 saved_voice_recordings/
 scripts/test_voices/
+voice_recordings/
+tests/voice_discrimination/logs/
+voice_analysis.png

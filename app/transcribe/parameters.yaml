@@ -50,7 +50,7 @@ General:
   # Voice Filter Settings (NEW)
   voice_filter_enabled: Yes
   voice_filter_profile: my_voice.npy
-  voice_filter_threshold: 0.25
+  voice_filter_threshold: 0.625
   inverted_voice_response: Yes
   
   log_file: 'logs/Transcribe.log'
