@@ -26,3 +26,9 @@ appdirs
 pillow==11.1.0
 wordcloud==1.9.4
 ffmpeg-python
+
+# Monitoring system dependencies
+aiohttp==3.11.11
+aiohttp-sse==2.2.0
+aiohttp-cors==0.7.0
+requests==2.32.3

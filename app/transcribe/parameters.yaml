@@ -52,6 +52,7 @@ General:
   voice_filter_profile: my_voice.npy
   voice_filter_threshold: 0.625
   inverted_voice_response: Yes
+  voice_identification_enabled: No  # Disable old system if present
   
   log_file: 'logs/Transcribe.log'
   # These two parameters are used together.
