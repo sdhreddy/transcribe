@@ -1,5 +1,17 @@
 @echo off
-REM Set the HuggingFace token for Windows environment
-setx HF_TOKEN "YOUR_HF_TOKEN_HERE"
-echo HuggingFace token set! Please restart the app.
+echo Setting HuggingFace token for voice discrimination feature...
+echo.
+echo You need a HuggingFace token to use the voice discrimination feature.
+echo Get your token from: https://huggingface.co/settings/tokens
+echo.
+set /p HF_TOKEN="Enter your HuggingFace token: "
+echo %HF_TOKEN% > "%USERPROFILE%\huggingface_token.txt"
+setx HF_TOKEN "%HF_TOKEN%"
+echo.
+echo Token saved to %USERPROFILE%\huggingface_token.txt
+echo Token also set as environment variable HF_TOKEN
+echo.
+echo You can now use the voice enrollment script:
+echo python scripts\make_voiceprint.py --record
+echo.
 pause

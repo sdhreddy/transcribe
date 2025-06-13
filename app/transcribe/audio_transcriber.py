@@ -21,6 +21,7 @@ from difflib import SequenceMatcher
 
 from . import conversation  # noqa: E402 pylint: disable=C0413
 from . import constants  # noqa: E402 pylint: disable=C0413
+from .voice_filter import VoiceFilter  # noqa: E402 pylint: disable=C0413
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 import custom_speech_recognition as sr  # noqa: E402 pylint: disable=C0413
@@ -99,6 +100,22 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             }
         }
         self.conversation = convo
+        
+        # Initialize voice filter if enabled
+        self.voice_filter = None
+        self.voice_filter_enabled = config.get('General', {}).get('voice_filter_enabled', 'No') == 'Yes'
+        self.inverted_voice_response = config.get('General', {}).get('inverted_voice_response', 'Yes') == 'Yes'
+        
+        if self.voice_filter_enabled:
+            try:
+                voice_profile = config.get('General', {}).get('voice_filter_profile', 'my_voice.npy')
+                threshold = float(config.get('General', {}).get('voice_filter_threshold', 0.25))
+                self.voice_filter = VoiceFilter(profile_path=voice_profile, threshold=threshold)
+                logger.info(f"Voice filter initialized with profile: {voice_profile}, threshold: {threshold}")
+                logger.info(f"Inverted logic enabled: {self.inverted_voice_response}")
+            except Exception as e:
+                logger.error(f"Failed to initialize voice filter: {e}")
+                self.voice_filter_enabled = False
 
     def set_source_properties(self, mic_source=None, speaker_source=None):
         """Resets the audio source properties stored in internal data structures.
@@ -151,8 +168,34 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
 
             if text != '' and text.lower() != 'you':
                 if not (who_spoke == 'Speaker' and self._should_ignore_speaker_transcript(text)):
-                    self.update_transcript(who_spoke, text, time_spoken)
-                    self.transcript_changed_event.set()
+                    # Apply voice filtering if enabled and it's from microphone
+                    should_process = True
+                    if self.voice_filter_enabled and self.voice_filter and who_spoke == 'You':
+                        try:
+                            # Convert audio data to numpy array
+                            import numpy as np
+                            audio_array = np.frombuffer(source_info["last_sample"], dtype=np.int16)
+                            sample_rate = source_info["sample_rate"]
+                            
+                            # Check if it's user's voice
+                            is_user_voice, confidence = self.voice_filter.is_user_voice(audio_array, sample_rate)
+                            
+                            # Determine if we should respond based on inverted logic
+                            should_process = self.voice_filter.should_respond(is_user_voice, self.inverted_voice_response)
+                            
+                            logger.info(f"Voice filter: is_user={is_user_voice}, confidence={confidence:.3f}, "
+                                       f"inverted={self.inverted_voice_response}, should_process={should_process}")
+                            
+                        except Exception as e:
+                            logger.error(f"Voice filtering error: {e}")
+                            # If voice filtering fails, default to processing
+                            should_process = True
+                    
+                    if should_process:
+                        self.update_transcript(who_spoke, text, time_spoken)
+                        self.transcript_changed_event.set()
+                    else:
+                        logger.info(f"Voice filter: Ignoring transcript from user: {text}")
 
     def _prune_audio_file(self, results, who_spoke, time_spoken, path):
         """Checks if pruning of Audio Source is required based on transcriber
@@ -283,9 +326,10 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             # time_spoken - when current audio record was put into the queue (utc)
             if source_info["last_spoken"] and time_spoken - source_info["last_spoken"] \
                     > datetime.timedelta(seconds=PHRASE_TIMEOUT):
-                source_info["last_sample"] = bytes()
+                source_info["last_sample"] = data  # Start fresh - FIX: was bytes(), now data
                 source_info["new_phrase"] = True
             else:
+                source_info["last_sample"] += data  # Accumulate
                 source_info["new_phrase"] = False
 
             if isinstance(self.stt_model, WhisperCPPSTTModel):
@@ -318,7 +362,7 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                 os.unlink(file_path)
                 os.unlink(mod_file_path)
 
-            source_info["last_sample"] += data
+            # DO NOT accumulate again after this block! - FIX for double accumulation bug
             source_info["last_spoken"] = time_spoken
 
     def process_mic_data(self, data, temp_file_name):

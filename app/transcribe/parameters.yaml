@@ -47,6 +47,12 @@ WhisperCpp:
   local_transcription_model_file: 'base'
 
 General:
+  # Voice Filter Settings (NEW)
+  voice_filter_enabled: Yes
+  voice_filter_profile: my_voice.npy
+  voice_filter_threshold: 0.25
+  inverted_voice_response: Yes
+  
   log_file: 'logs/Transcribe.log'
   # These two parameters are used together.
   # Save LLM response to file if save_llm_response_to_file is Yes

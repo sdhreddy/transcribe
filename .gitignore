@@ -23,3 +23,15 @@ app/transcribe/logs/speaker.wav
 app/transcribe/logs/speaker.wav.bak
 app/transcribe/logs/deep.json
 0001-Update-libraries-to-the-latest-version-276.patch
+
+# Context and documentation files (private)
+CLAUDE.md
+SUMMARY.md
+.context/
+
+# Voice discrimination files (private)
+my_voice.npy
+*.npy
+voice_sample*.wav
+saved_voice_recordings/
+scripts/test_voices/
