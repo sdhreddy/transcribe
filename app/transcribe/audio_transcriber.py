@@ -197,6 +197,8 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                             
                             logger.info(f"Voice filter: is_user={is_user_voice}, confidence={confidence:.3f}, "
                                        f"inverted={self.inverted_voice_response}, should_process={should_process}")
+                            print(f"[INFO] Voice filter: is_user={is_user_voice}, confidence={confidence:.3f}, "
+                                  f"inverted={self.inverted_voice_response}, should_process={should_process}")
                             
                         except Exception as e:
                             logger.error(f"Voice filtering error: {e}")
@@ -208,6 +210,7 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                         self.transcript_changed_event.set()
                     else:
                         logger.info(f"Voice filter: Ignoring transcript from user: {text}")
+                        print(f"[INFO] Voice filter: Ignoring transcript from user: {text}")
                         # Reset the audio buffer to prevent old audio from being reused
                         self._reset_source_buffer(who_spoke)
 
