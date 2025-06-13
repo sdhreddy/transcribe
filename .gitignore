@@ -43,3 +43,6 @@ voice_analysis.png
 
 # API keys and sensitive config
 app/transcribe/override.yaml
+
+# Test results
+test_results/
