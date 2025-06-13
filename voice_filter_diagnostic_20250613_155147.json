@@ -1,0 +1,17 @@
+{
+  "timestamp": "2025-06-13T15:51:47.856152",
+  "configuration": {
+    "voice_filter_enabled": true,
+    "voice_filter_profile": "my_voice.npy",
+    "voice_filter_threshold": 0.425,
+    "inverted_voice_response": true,
+    "voice_identification_enabled": false
+  },
+  "issues": [
+    "voice_filter_enabled should be 'Yes'"
+  ],
+  "test_results": [
+    {
+      "file": "Colleague A.wav",
+      "distance": 0.9323078927838062,
+      "is_user": 

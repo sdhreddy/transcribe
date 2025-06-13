@@ -1,0 +1,42 @@
+{
+  "timestamp": "2025-06-13T15:52:14.543883",
+  "configuration": {
+    "voice_filter_enabled": true,
+    "voice_filter_profile": "my_voice.npy",
+    "voice_filter_threshold": 0.425,
+    "inverted_voice_response": true,
+    "voice_identification_enabled": false
+  },
+  "issues": [
+    "voice_filter_enabled should be 'Yes'"
+  ],
+  "test_results": [
+    {
+      "file": "Colleague A.wav",
+      "distance": 0.9323078927838062,
+      "is_user": false,
+      "should_respond": true
+    },
+    {
+      "file": "Colleague B.wav",
+      "distance": 1.0346883655480124,
+      "is_user": false,
+      "should_respond": true
+    },
+    {
+      "file": "Colleague C.wav",
+      "distance": 0.981737817382376,
+      "is_user": false,
+      "should_respond": true
+    },
+    {
+      "file": "Primary_User.wav",
+      "distance": 0.3171593908994136,
+      "is_user": true,
+      "should_respond": false
+    }
+  ],
+  "profile_exists": true,
+  "hf_token_found": true,
+  "model_loaded": true
+}

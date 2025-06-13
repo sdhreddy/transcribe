@@ -27,17 +27,23 @@ except ImportError as e:
 class VoiceFilter:
     """Voice filter using Pyannote speaker embeddings for accurate voice identification."""
     
-    def __init__(self, profile_path: str = "my_voice.npy", threshold: float = 0.25):
+    def __init__(self, profile_path: str = "my_voice.npy", threshold: float = 0.25, min_window: float = 2.0):
         """Initialize voice filter with user's voice profile.
         
         Args:
             profile_path: Path to saved voice embedding (.npy file)
             threshold: Cosine distance threshold for voice matching (lower = stricter)
+            min_window: Minimum audio duration in seconds to accumulate before making decision
         """
         self.profile_path = profile_path
         self.threshold = threshold
         self.user_embedding = None
         self.inference = None
+        self.min_window = min_window
+        # Audio buffer for accumulating short segments
+        self.audio_buffer = []
+        self.buffer_duration = 0.0
+        self.buffer_sample_rate = None
         
         if not PYANNOTE_AVAILABLE:
             logger.error("Pyannote not available. Voice filtering disabled.")
@@ -173,13 +179,31 @@ class VoiceFilter:
         
         Returns:
             Tuple of (is_user_voice, confidence_score)
+            Returns (None, 0.0) if not enough audio accumulated yet
         """
         if not PYANNOTE_AVAILABLE or self.user_embedding is None or self.inference is None:
             return False, 0.0
         
         try:
-            # Extract embedding from audio
-            embedding = self.extract_embedding_from_array(audio_data, sample_rate)
+            # Add to buffer
+            self.audio_buffer.append(audio_data)
+            self.buffer_duration += len(audio_data) / sample_rate
+            self.buffer_sample_rate = sample_rate
+            
+            # Check if we have enough audio
+            if self.buffer_duration < self.min_window:
+                logger.debug(f"Buffering audio: {self.buffer_duration:.2f}s / {self.min_window}s")
+                return None, 0.0  # Signal to keep buffering
+            
+            # Concatenate all buffered audio
+            full_audio = np.concatenate(self.audio_buffer)
+            
+            # Clear buffer for next detection
+            self.audio_buffer = []
+            self.buffer_duration = 0.0
+            
+            # Extract embedding from full audio
+            embedding = self.extract_embedding_from_array(full_audio, sample_rate)
             if embedding is None:
                 return False, 0.0
             
@@ -196,7 +220,16 @@ class VoiceFilter:
             
         except Exception as e:
             logger.error(f"Error in voice check: {e}")
+            # Clear buffer on error
+            self.audio_buffer = []
+            self.buffer_duration = 0.0
             return False, 0.0
+    
+    def clear_buffer(self):
+        """Clear the audio buffer."""
+        self.audio_buffer = []
+        self.buffer_duration = 0.0
+        logger.debug("Voice filter buffer cleared")
     
     def should_respond(self, is_user_voice: bool, inverted: bool = True) -> bool:
         """Determine if AI should respond based on voice detection and logic setting.

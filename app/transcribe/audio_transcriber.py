@@ -201,8 +201,13 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                             # Check if it's user's voice
                             is_user_voice, confidence = self.voice_filter.is_user_voice(audio_array, sample_rate)
                             
-                            # Determine if we should respond based on inverted logic
-                            should_process = self.voice_filter.should_respond(is_user_voice, self.inverted_voice_response)
+                            # If None, we need more audio - continue processing this time
+                            if is_user_voice is None:
+                                logger.debug("Voice filter buffering audio, processing this segment")
+                                should_process = True
+                            else:
+                                # Determine if we should respond based on inverted logic
+                                should_process = self.voice_filter.should_respond(is_user_voice, self.inverted_voice_response)
                             
                             logger.info(f"Voice filter: is_user={is_user_voice}, confidence={confidence:.3f}, "
                                        f"inverted={self.inverted_voice_response}, should_process={should_process}")
@@ -257,6 +262,9 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
             source_info["new_phrase"] = True
             # Also clear the recent transcript to prevent confusion
             self.recent_transcripts[who_spoke] = ""
+            # Clear voice filter buffer if applicable
+            if self.voice_filter and who_spoke == 'You':
+                self.voice_filter.clear_buffer()
             logger.debug(f"Reset audio buffer for {who_spoke}")
 
     def _should_ignore_speaker_transcript(self, text: str) -> bool:

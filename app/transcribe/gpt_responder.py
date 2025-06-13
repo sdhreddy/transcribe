@@ -49,6 +49,11 @@ class GPTResponder:
         self.response_file = file_name
         self.openai_module = openai_module
         self.streaming_complete = threading.Event()
+        # Track current request to allow cancellation
+        self._current_request = None
+        self._request_lock = threading.Lock()
+        self._last_processed_text = ""
+        self._cancel_requested = False
 
     def summarize(self) -> str:
         """Ping LLM to get a summary of the conversation.
@@ -118,29 +123,52 @@ class GPTResponder:
         temperature = self.config['OpenAI']['temperature']
         return timeout, temperature
 
+    def _cancel_current_request(self):
+        """Cancel any ongoing request."""
+        with self._request_lock:
+            if self._current_request:
+                logger.info("Cancelling previous GPT request")
+                print("[INFO] Cancelling previous GPT request")
+                # Set flag to stop streaming
+                self._cancel_requested = True
+
     def _get_llm_response(self, messages, temperature, timeout) -> str:
         """Send a request to the LLM and process the streaming response."""
         self.streaming_complete.clear()
+        self._cancel_requested = False
+        
         with duration.Duration(name='OpenAI Chat Completion', screen=False):
-            multi_turn_response = self.llm_client.chat.completions.create(
-                model=self.model,
-                messages=messages,
-                temperature=temperature,
-                timeout=timeout,
-                stream=True
-            )
+            with self._request_lock:
+                self._current_request = self.llm_client.chat.completions.create(
+                    model=self.model,
+                    messages=messages,
+                    temperature=temperature,
+                    timeout=timeout,
+                    stream=True
+                )
 
             collected_messages = ""
-            for chunk in multi_turn_response:
-                chunk_message = chunk.choices[0].delta  # extract the message
-                if chunk_message.content:
-                    message_text = chunk_message.content
-                    collected_messages += message_text
-                    self._update_conversation(persona=constants.PERSONA_ASSISTANT,
-                                              response=collected_messages,
-                                              update_previous=True)
+            try:
+                for chunk in self._current_request:
+                    # Check if cancellation requested
+                    if self._cancel_requested:
+                        logger.info("Request cancelled, stopping stream")
+                        print("[INFO] Request cancelled, stopping stream")
+                        break
+                        
+                    chunk_message = chunk.choices[0].delta  # extract the message
+                    if chunk_message.content:
+                        message_text = chunk_message.content
+                        collected_messages += message_text
+                        self._update_conversation(persona=constants.PERSONA_ASSISTANT,
+                                                  response=collected_messages,
+                                                  update_previous=True)
+            finally:
+                with self._request_lock:
+                    self._current_request = None
+                    
             self.streaming_complete.set()
-            return collected_messages
+            return collected_messages if not self._cancel_requested else None
 
     def _insert_response_in_db(self, last_convo_id: int, response: str):
         """Insert the generated response into the database."""
@@ -159,6 +187,9 @@ class GPTResponder:
             str: The generated response from the LLM.
         """
         logger.info(GPTResponder.generate_response_from_transcript_no_check.__name__)
+        
+        # Cancel any ongoing request first
+        self._cancel_current_request()
 
         try:
             chat_inference_provider = self.config['General']['chat_inference_provider']
@@ -174,6 +205,12 @@ class GPTResponder:
             last_convo_id = int(multiturn_prompt_content[-1][2])
             multiturn_prompt_api_message = prompts.create_multiturn_prompt(multiturn_prompt_content)
             collected_messages = self._get_llm_response(multiturn_prompt_api_message, temperature, timeout)
+            
+            # If request was cancelled, return None
+            if collected_messages is None:
+                logger.info("Request was cancelled, returning None")
+                return None
+                
             self._insert_response_in_db(last_convo_id, collected_messages)
 
         except Exception as e:
