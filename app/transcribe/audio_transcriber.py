@@ -101,10 +101,19 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
         }
         self.conversation = convo
         
+        # Helper function to handle YAML boolean/string conversion
+        def _is_enabled(value):
+            """Convert various representations to boolean."""
+            if isinstance(value, bool):
+                return value
+            if isinstance(value, str):
+                return value.lower() in ('yes', 'true', '1', 'on')
+            return False
+        
         # Initialize voice filter if enabled
         self.voice_filter = None
-        self.voice_filter_enabled = config.get('General', {}).get('voice_filter_enabled', 'No') == 'Yes'
-        self.inverted_voice_response = config.get('General', {}).get('inverted_voice_response', 'Yes') == 'Yes'
+        self.voice_filter_enabled = _is_enabled(config.get('General', {}).get('voice_filter_enabled', 'No'))
+        self.inverted_voice_response = _is_enabled(config.get('General', {}).get('inverted_voice_response', 'Yes'))
         
         if self.voice_filter_enabled:
             try:
@@ -196,6 +205,8 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                         self.transcript_changed_event.set()
                     else:
                         logger.info(f"Voice filter: Ignoring transcript from user: {text}")
+                        # Reset the audio buffer to prevent old audio from being reused
+                        self._reset_source_buffer(who_spoke)
 
     def _prune_audio_file(self, results, who_spoke, time_spoken, path):
         """Checks if pruning of Audio Source is required based on transcriber
@@ -222,6 +233,14 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                                                   time_spoken=time_spoken,
                                                   text=second,
                                                   update_previous=False)
+
+    def _reset_source_buffer(self, who_spoke: str):
+        """Reset the audio buffer for a given source to prevent old audio from being reused."""
+        source_info = self.audio_sources_properties[who_spoke]
+        with source_info["mutex"]:
+            source_info["last_sample"] = bytes()
+            source_info["new_phrase"] = True
+            logger.debug(f"Reset audio buffer for {who_spoke}")
 
     def _should_ignore_speaker_transcript(self, text: str) -> bool:
         """Determine if speaker transcript matches recent TTS output."""
