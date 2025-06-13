@@ -57,6 +57,8 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
         # using separate mutex for each audio source
         self.mutex = threading.Lock()
         self.config = config
+        # Track recent transcripts to prevent duplicates
+        self.recent_transcripts = {"You": "", "Speaker": ""}
         self.clear_transcript_periodically: bool = \
             self.config['General']['clear_transcript_periodically']
         self.clear_transcript_interval_seconds: int = \
@@ -179,6 +181,13 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                 os.unlink(path)
 
             if text != '' and text.lower() != 'you':
+                # Check for duplicate transcript
+                if text.strip() == self.recent_transcripts[who_spoke].strip():
+                    print(f"[INFO] Duplicate transcript detected from {who_spoke}, skipping: {text[:30]}...")
+                    return
+                
+                self.recent_transcripts[who_spoke] = text
+                
                 if not (who_spoke == 'Speaker' and self._should_ignore_speaker_transcript(text)):
                     # Apply voice filtering if enabled and it's from microphone
                     should_process = True
@@ -246,6 +255,8 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
         with source_info["mutex"]:
             source_info["last_sample"] = bytes()
             source_info["new_phrase"] = True
+            # Also clear the recent transcript to prevent confusion
+            self.recent_transcripts[who_spoke] = ""
             logger.debug(f"Reset audio buffer for {who_spoke}")
 
     def _should_ignore_speaker_transcript(self, text: str) -> bool:
