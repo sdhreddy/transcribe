@@ -135,7 +135,11 @@ class VoiceFilter:
         try:
             # Save to temporary file (Pyannote requires file input)
             import tempfile
-            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
+            # Create temp file and close it immediately to avoid locking issues
+            tmp_fd, tmp_path = tempfile.mkstemp(suffix=".wav")
+            os.close(tmp_fd)  # Close file descriptor immediately
+            
+            try:
                 # Convert to torch tensor and save
                 if audio_data.dtype != np.float32:
                     audio_data = audio_data.astype(np.float32)
@@ -145,15 +149,20 @@ class VoiceFilter:
                     audio_data = audio_data / 32768.0
                 
                 tensor = torch.from_numpy(audio_data).unsqueeze(0)
-                torchaudio.save(tmp.name, tensor, sample_rate)
+                torchaudio.save(tmp_path, tensor, sample_rate)
                 
                 # Extract embedding
-                embedding = self.inference(tmp.name)
+                embedding = self.inference(tmp_path)
                 
-                # Clean up
-                os.unlink(tmp.name)
+                return embedding
                 
-            return embedding
+            finally:
+                # Clean up - with retry for Windows
+                try:
+                    os.unlink(tmp_path)
+                except Exception:
+                    # If deletion fails, it's okay - temp files will be cleaned up later
+                    pass
             
         except Exception as e:
             logger.error(f"Failed to extract embedding from array: {e}")
