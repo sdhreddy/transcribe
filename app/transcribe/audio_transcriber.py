@@ -34,7 +34,7 @@ from sdk.transcriber_models import WhisperCPPSTTModel
 # See the prompting section here https://platform.openai.com/docs/guides/speech-to-text/prompting
 
 # pylint: disable=logging-fstring-interpolation
-PHRASE_TIMEOUT = 3.05
+PHRASE_TIMEOUT = 5.0  # Increased from 3.05 to allow longer sentences
 logger = al.get_module_logger(al.TRANSCRIBER_LOGGER)
 # Attempt to prune after these number of segments in transcription
 WHISPER_SEGMENT_PRUNE_THRESHOLD = 6

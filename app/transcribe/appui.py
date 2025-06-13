@@ -912,5 +912,5 @@ def update_response_ui(responder: gr.GPTResponder,
     update_interval_slider_label.configure(text=f'LLM Response interval: '
                                            f'{update_interval} seconds')
 
-    textbox.after(300, update_response_ui, responder, textbox,
+    textbox.after(100, update_response_ui, responder, textbox,  # Reduced from 300ms to 100ms for faster TTS
                   update_interval_slider_label, update_interval_slider)
