@@ -122,8 +122,11 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                 self.voice_filter = VoiceFilter(profile_path=voice_profile, threshold=threshold)
                 logger.info(f"Voice filter initialized with profile: {voice_profile}, threshold: {threshold}")
                 logger.info(f"Inverted logic enabled: {self.inverted_voice_response}")
+                print(f"[INFO] Voice filter initialized with profile: {voice_profile}, threshold: {threshold}")
+                print(f"[INFO] Inverted logic enabled: {self.inverted_voice_response}")
             except Exception as e:
                 logger.error(f"Failed to initialize voice filter: {e}")
+                print(f"[ERROR] Failed to initialize voice filter: {e}")
                 self.voice_filter_enabled = False
 
     def set_source_properties(self, mic_source=None, speaker_source=None):
