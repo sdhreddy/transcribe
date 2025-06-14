@@ -37,6 +37,7 @@ def main():
     global_vars = T_GLOBALS
 
     update_args_config(args, config)
+    global_vars.config = config  # Store for use in UI
     # Initiate DB
     au.initiate_db(global_vars)
     global_vars.initiate_audio_devices(config)

@@ -49,6 +49,7 @@ class TranscriptionGlobals(Singleton.Singleton):
     # Current working directory
     current_working_dir: str = None
     db_context: dict = None
+    config: dict = None
 
     convo: conversation.Conversation = None
     _initialized: bool = None
