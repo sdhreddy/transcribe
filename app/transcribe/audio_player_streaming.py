@@ -13,7 +13,7 @@ class StreamingAudioPlayer(threading.Thread):
     
     def __init__(self, sample_rate=24_000, buf_ms=50, output_device_index=None):
         super().__init__(daemon=True)
-        self.q: queue.Queue[bytes] = queue.Queue(maxsize=20)
+        self.q: queue.Queue[bytes] = queue.Queue(maxsize=100)
         self.sample_rate = sample_rate
         self.buf_ms = buf_ms / 1000
         self.running = True
@@ -57,6 +57,9 @@ class StreamingAudioPlayer(threading.Thread):
 
     def enqueue(self, chunk: bytes):
         """Add audio chunk to playback queue."""
+        if self.q.full():
+            logger.warning("[TTS] queue full – dropping audio chunk")
+            return
         try:
             self.q.put(chunk, timeout=0.1)
         except queue.Full:

@@ -205,6 +205,9 @@ class GPTResponder:
                     
             self.streaming_complete.set()
             self.flush_tts_buffer()
+            # Wait for TTS queue to empty before returning
+            if self.tts_enabled and hasattr(self, 'sent_q'):
+                self.sent_q.join()  # wait until player consumed everything
             return collected_messages if not self._cancel_requested else None
 
     def _insert_response_in_db(self, last_convo_id: int, response: str):
@@ -375,6 +378,9 @@ class GPTResponder:
                         self._handle_streaming_token(message_text)
                 self.streaming_complete.set()
                 self.flush_tts_buffer()
+                # Wait for TTS queue to empty before returning
+                if self.tts_enabled and hasattr(self, 'sent_q'):
+                    self.sent_q.join()  # wait until player consumed everything
 
         except Exception as exception:
             print('Error when attempting to get a response from LLM.')
@@ -525,6 +531,9 @@ class GPTResponder:
                 
                 total_time = time.time() - start_time
                 logger.info(f"[TTS Debug] TTS completed: {chunk_count} chunks in {total_time*1000:.0f}ms")
+                
+                # Mark task as done for queue.join()
+                self.sent_q.task_done()
                     
             except queue.Empty:
                 continue
