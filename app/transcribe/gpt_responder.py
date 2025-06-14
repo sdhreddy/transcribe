@@ -84,6 +84,7 @@ class GPTResponder:
             logger.info(f"[TTS Debug] Voice: {tts_config.voice}, Sample rate: {tts_config.sample_rate}")
         else:
             self.tts_enabled = False
+        self.streaming_tts_active = False  # Flag to prevent old TTS interference
         # Track current request to allow cancellation
         self._current_request = None
         self._request_lock = threading.Lock()
@@ -203,6 +204,7 @@ class GPTResponder:
                 with self._request_lock:
                     self._current_request = None
                     
+            self.streaming_tts_active = False  # Clear flag
             self.streaming_complete.set()
             self.flush_tts_buffer()
             
@@ -374,7 +376,8 @@ class GPTResponder:
                                                   response=collected_messages,
                                                   update_previous=True)
                         self._handle_streaming_token(message_text)
-                self.streaming_complete.set()
+                self.streaming_tts_active = False  # Clear flag
+            self.streaming_complete.set()
                 self.flush_tts_buffer()
                 
 
@@ -453,6 +456,7 @@ class GPTResponder:
     def _handle_streaming_token(self, token: str):
         """Handle incoming token from LLM stream for TTS processing."""
         if not self.tts_enabled:
+            self.streaming_tts_active = True
             return
             
         self.buffer += token

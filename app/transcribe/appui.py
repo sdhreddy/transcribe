@@ -910,7 +910,8 @@ def update_response_ui(responder: gr.GPTResponder,
         if (global_vars_module.continuous_read and
                 responder.streaming_complete.is_set() and
                 response != global_vars_module.last_spoken_response and
-                not streaming_tts_enabled):
+                not streaming_tts_enabled and
+                not (hasattr(responder, 'streaming_tts_active') and responder.streaming_tts_active)):
             global_vars_module.last_tts_response = response
             global_vars_module.last_spoken_response = response
             global_vars_module.set_read_response(True)
