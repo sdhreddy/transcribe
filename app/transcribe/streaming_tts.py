@@ -39,14 +39,20 @@ class OpenAITTS(BaseTTS):
             model="tts-1",
             voice=self.cfg.voice,
             input=text,
-            response_format="pcm",    # raw PCM for immediate playback
-            stream=True               # Enable streaming response
+            response_format="pcm"     # raw PCM for immediate playback
         )
         
         # The response supports chunk iteration via iter_bytes()
+        chunk_count = 0
+        total_bytes = 0
         for chunk in resp.iter_bytes(chunk_size=4096):
             # Each chunk is bytes containing raw 16-bit PCM audio
+            chunk_count += 1
+            total_bytes += len(chunk)
+            if chunk_count == 1:
+                print(f"[TTS Debug] First audio chunk from OpenAI: {len(chunk)} bytes")
             yield chunk
+        print(f"[TTS Debug] OpenAI TTS complete: {chunk_count} chunks, {total_bytes} bytes")
 
 # ---------- GTTS Fallback (non-streaming but compatible) ---------------------------
 

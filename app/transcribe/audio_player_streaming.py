@@ -70,11 +70,14 @@ class StreamingAudioPlayer(threading.Thread):
             logger.error(f"[TTS Debug] Invalid chunk type: {type(chunk).__name__}, expected bytes. Dropping chunk.")
             return
             
+        logger.debug(f"[TTS Debug] Enqueuing audio chunk: {len(chunk)} bytes")
+            
         if self.q.full():
             logger.warning("[TTS] queue full – dropping audio chunk")
             return
         try:
             self.q.put(chunk, timeout=0.1)
+            logger.debug(f"[TTS Debug] Audio chunk enqueued successfully, queue size: {self.q.qsize()}")
         except queue.Full:
             logger.warning("[TTS Debug] Audio queue full, dropping chunk")
 
