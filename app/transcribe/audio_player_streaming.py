@@ -15,9 +15,10 @@ class StreamingAudioPlayer(threading.Thread):
         super().__init__(daemon=True)
         self.q: queue.Queue[bytes] = queue.Queue(maxsize=100)
         self.sample_rate = sample_rate
-        self.buf_ms = buf_ms / 1000
+        self.buf_ms = buf_ms
         self.running = True
         self.playing = False
+        self.output_device_index = output_device_index
         
         try:
             pa = pyaudio.PyAudio()
@@ -25,22 +26,27 @@ class StreamingAudioPlayer(threading.Thread):
             # Windows fix: List available devices if no device specified
             if output_device_index is None:
                 device_count = pa.get_device_count()
-                logger.info(f"Found {device_count} audio devices")
+                logger.info(f"[Audio Init] Found {device_count} audio devices")
                 
                 # Try to find default output device
                 try:
                     default_output = pa.get_default_output_device_info()
                     output_device_index = default_output['index']
-                    logger.info(f"Using default output device: {default_output['name']}")
-                except Exception:
-                    logger.warning("No default output device found, using device 0")
+                    self.output_device_index = output_device_index
+                    logger.info(f"[Audio Init] Using default output device: {default_output['name']}")
+                except Exception as e:
+                    logger.warning(f"[Audio Init] No default output device found ({e}), using device 0")
                     output_device_index = 0
+                    self.output_device_index = 0
             
             # Windows fix: Increase buffer size on Windows for stability
             import platform
             if platform.system() == "Windows":
                 buf_ms = max(75, buf_ms)  # Minimum 75ms on Windows
-                logger.info(f"Windows detected: Using {buf_ms}ms buffer")
+                logger.info(f"[Audio Init] Windows detected: Using {buf_ms}ms buffer")
+            
+            frames_per_buffer = int(sample_rate * (buf_ms / 1000))
+            logger.info(f"[Audio Init] Creating stream with frames_per_buffer={frames_per_buffer}")
             
             self.stream = pa.open(
                 format=pyaudio.paInt16,
@@ -48,11 +54,13 @@ class StreamingAudioPlayer(threading.Thread):
                 rate=sample_rate,
                 output=True,
                 output_device_index=output_device_index,
-                frames_per_buffer=int(sample_rate * (buf_ms / 1000))
+                frames_per_buffer=frames_per_buffer
             )
-            logger.info(f"Streaming audio player initialized: {sample_rate}Hz, {buf_ms}ms buffer, device {output_device_index}")
+            logger.info(f"[Audio Init] Streaming audio player initialized: {sample_rate}Hz, {buf_ms}ms buffer, device {output_device_index}")
         except Exception as e:
-            logger.error(f"Failed to initialize PyAudio: {e}")
+            logger.error(f"[Audio Init] Failed to initialize PyAudio: {type(e).__name__}: {e}")
+            import traceback
+            logger.error(f"[Audio Init] Traceback:\n{traceback.format_exc()}")
             raise
 
     def enqueue(self, chunk: bytes):

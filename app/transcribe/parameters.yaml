@@ -43,7 +43,7 @@ General:
   tts_provider: openai
   tts_voice: alloy
   tts_sample_rate: 24000
-  tts_min_sentence_chars: 40
+  tts_min_sentence_chars: 20
   chat_inference_provider: openai
   default_prompt_preamble: 'You are a casual pal, genuinely interested in the conversation
     at hand. A poor transcription of conversation is given below. '
