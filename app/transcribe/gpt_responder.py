@@ -4,9 +4,13 @@ from enum import Enum
 import threading
 # import pprint
 import openai
+import re
+import queue
 from . import prompts
 from . import conversation
 from . import constants
+from .streaming_tts import create_tts, TTSConfig
+from .audio_player_streaming import StreamingAudioPlayer
 from .db import (
     AppDB as appdb,
     llm_responses as llmrdb,
@@ -49,6 +53,29 @@ class GPTResponder:
         self.response_file = file_name
         self.openai_module = openai_module
         self.streaming_complete = threading.Event()
+        
+        # Streaming TTS support
+        self.buffer = ""
+        self.sent_q: queue.Queue[str] = queue.Queue()
+        self.SENT_END = re.compile(r"[.!?]\s")  # sentence boundary pattern - requires space after punctuation
+        
+        # Initialize TTS if enabled
+        if config.get('General', {}).get('tts_streaming_enabled', False):
+            tts_config = TTSConfig(
+                provider=config.get('General', {}).get('tts_provider', 'gtts'),
+                voice=config.get('General', {}).get('tts_voice', 'alloy'),
+                sample_rate=config.get('General', {}).get('tts_sample_rate', 24000),
+                api_key=config.get('OpenAI', {}).get('api_key')
+            )
+            self.tts = create_tts(tts_config)
+            self.player = StreamingAudioPlayer(sample_rate=tts_config.sample_rate)
+            self.player.start()
+            self.tts_worker_thread = threading.Thread(target=self._tts_worker, daemon=True)
+            self.tts_worker_thread.start()
+            self.tts_enabled = True
+            logger.info("Streaming TTS initialized")
+        else:
+            self.tts_enabled = False
         # Track current request to allow cancellation
         self._current_request = None
         self._request_lock = threading.Lock()
@@ -163,11 +190,13 @@ class GPTResponder:
                         self._update_conversation(persona=constants.PERSONA_ASSISTANT,
                                                   response=collected_messages,
                                                   update_previous=True)
+                        self._handle_streaming_token(message_text)
             finally:
                 with self._request_lock:
                     self._current_request = None
                     
             self.streaming_complete.set()
+            self.flush_tts_buffer()
             return collected_messages if not self._cancel_requested else None
 
     def _insert_response_in_db(self, last_convo_id: int, response: str):
@@ -335,7 +364,9 @@ class GPTResponder:
                         self._update_conversation(persona=constants.PERSONA_ASSISTANT,
                                                   response=collected_messages,
                                                   update_previous=True)
+                        self._handle_streaming_token(message_text)
                 self.streaming_complete.set()
+                self.flush_tts_buffer()
 
         except Exception as exception:
             print('Error when attempting to get a response from LLM.')
@@ -408,6 +439,68 @@ class GPTResponder:
             print('  }')
 
         print(']')
+    
+    def _handle_streaming_token(self, token: str):
+        """Handle incoming token from LLM stream for TTS processing."""
+        if not self.tts_enabled:
+            return
+            
+        self.buffer += token
+        
+        # Check for sentence boundary
+        match = self.SENT_END.search(self.buffer)
+        if match:
+            # Extract complete sentence
+            complete_sentence = self.buffer[:match.end()].strip()
+            
+            # Use min_sentence_chars from config (default 10 if not set)
+            min_chars = self.config.get('General', {}).get('tts_min_sentence_chars', 10)
+            
+            if complete_sentence and len(complete_sentence) >= min_chars:
+                self.sent_q.put(complete_sentence)
+                self.buffer = self.buffer[match.end():]
+        
+        # Force a break if buffer gets too long without punctuation
+        elif len(self.buffer) > 42:  # Matches the OpenAI recommendation
+            # Send what we have so far
+            if self.buffer.strip():
+                self.sent_q.put(self.buffer.strip())
+                self.buffer = ""
+    
+    def _tts_worker(self):
+        """Worker thread that converts sentences to speech and plays them."""
+        logger.info("TTS worker thread started")
+        
+        while True:
+            try:
+                sentence = self.sent_q.get(timeout=1.0)
+                if sentence is None:  # Shutdown signal
+                    break
+                    
+                logger.info(f"TTS processing: {len(sentence)} chars")
+                
+                # Stream TTS audio
+                for audio_chunk in self.tts.stream(sentence):
+                    self.player.enqueue(audio_chunk)
+                    
+            except queue.Empty:
+                continue
+            except Exception as e:
+                logger.error(f"TTS worker error: {e}")
+                
+        logger.info("TTS worker thread stopped")
+    
+    def flush_tts_buffer(self):
+        """Flush any remaining text in buffer when streaming completes."""
+        if self.tts_enabled and self.buffer.strip():
+            self.sent_q.put(self.buffer.strip())
+            self.buffer = ""
+    
+    def stop_tts(self):
+        """Stop TTS playback and cleanup."""
+        if self.tts_enabled:
+            self.sent_q.put(None)  # Signal worker to stop
+            self.player.stop()
 
 
 class OpenAIResponder(GPTResponder):

@@ -897,9 +897,14 @@ def update_response_ui(responder: gr.GPTResponder,
         write_in_textbox(textbox, response)
         textbox.configure(state="disabled")
         textbox.see("end")
+        # Only trigger old TTS if streaming TTS is not enabled
+        config = global_vars_module.config if hasattr(global_vars_module, 'config') else {}
+        streaming_tts_enabled = config.get('General', {}).get('tts_streaming_enabled', False)
+        
         if (global_vars_module.continuous_read and
                 responder.streaming_complete.is_set() and
-                response != global_vars_module.last_spoken_response):
+                response != global_vars_module.last_spoken_response and
+                not streaming_tts_enabled):
             global_vars_module.last_tts_response = response
             global_vars_module.last_spoken_response = response
             global_vars_module.set_read_response(True)
