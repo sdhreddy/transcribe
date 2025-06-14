@@ -44,6 +44,8 @@ class GPTResponder:
                  save_to_file: bool = False,
                  openai_module=openai):
         logger.info(GPTResponder.__name__)
+        print(f"[INIT DEBUG] GPTResponder.__init__ called")
+        print(f"[INIT DEBUG] Config General keys: {list(config.get('General', {}).keys())}")
         # This var is used by UI to populate the response textbox
         self.response = prompts.INITIAL_RESPONSE
         self.llm_response_interval = config['General']['llm_response_interval']
@@ -62,6 +64,8 @@ class GPTResponder:
         # Initialize TTS if enabled
         tts_enabled = config.get('General', {}).get('tts_streaming_enabled', False)
         logger.info(f"[TTS Debug] TTS streaming enabled: {tts_enabled}")
+        print(f"[INIT DEBUG] tts_streaming_enabled from config: {tts_enabled}")
+        print(f"[INIT DEBUG] tts_provider: {config.get('General', {}).get('tts_provider')}")
         
         if tts_enabled:
             tts_config = TTSConfig(
