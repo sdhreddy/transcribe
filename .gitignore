@@ -1,0 +1,105 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+*.egg-info/
+.pytest_cache/
+
+# Logs and databases
+*.log
+logs/
+*.db
+*.sqlite
+*.sqlite3
+
+# Personal/Sensitive files
+my_voice.npy
+~/.huggingface_token
+.huggingface_token
+*.wav
+*.mp3
+*.m4a
+saved_voice_recordings/
+voice_profiles/
+override.yaml
+
+# Test files
+test_*.py
+*_test.py
+diagnose_*.py
+verify_*.py
+simulated_*.py
+automated_*.py
+monitor_*.py
+run_*.py
+fix_*.py
+check_*.py
+create_test_*.py
+
+# Documentation and notes
+*.md
+*.txt
+CLAUDE*
+MASTER_CONTEXT*
+SESSION_*
+TODO*
+NOTES*
+FIX_*
+VOICE_FILTER_*
+ARM64_*
+X64_*
+SIMPLE_RECORDER_*
+cursor_*
+CURSOR_*
+
+# Backup files
+*.backup
+*.bak
+*_backup/
+backups*/
+*_archived_*/
+
+# IDE and system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# Releases and builds
+releases/
+dist/
+build/
+
+# API keys and credentials
+.env
+.env.*
+api_keys.py
+credentials.py
+
+# Data files
+data/
+datasets/
+models/
+*.npy
+*.pkl
+*.h5
+
+# Temporary files
+tmp/
+temp/
+cache/
+.cache/
+
+# Other
+experiments/
+drafts/
+personal/
+private/
