@@ -39,7 +39,8 @@ class OpenAITTS(BaseTTS):
             model="tts-1",
             voice=self.cfg.voice,
             input=text,
-            response_format="pcm"    # raw PCM for immediate playback
+            response_format="pcm",    # raw PCM for immediate playback
+            stream=True               # Enable streaming response
         )
         
         # The response supports chunk iteration via iter_bytes()

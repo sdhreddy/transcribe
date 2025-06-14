@@ -65,6 +65,11 @@ class StreamingAudioPlayer(threading.Thread):
 
     def enqueue(self, chunk: bytes):
         """Add audio chunk to playback queue."""
+        # Validate chunk is bytes
+        if not isinstance(chunk, (bytes, bytearray)):
+            logger.error(f"[TTS Debug] Invalid chunk type: {type(chunk).__name__}, expected bytes. Dropping chunk.")
+            return
+            
         if self.q.full():
             logger.warning("[TTS] queue full – dropping audio chunk")
             return
