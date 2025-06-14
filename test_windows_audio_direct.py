@@ -85,7 +85,17 @@ def test_tts_direct():
     try:
         from app.transcribe.streaming_tts import create_tts, TTSConfig
         
-        config = TTSConfig(provider="openai", voice="alloy")
+        # Load API key from configuration
+        from tsutils import configuration
+        app_config = configuration.Config().data
+        api_key = app_config.get('OpenAI', {}).get('api_key')
+        
+        if not api_key or api_key in ['null', 'YOUR_API_KEY']:
+            print(f"   ❌ No valid API key in configuration: {api_key}")
+            print("   Trying environment variable...")
+            api_key = os.environ.get('OPENAI_API_KEY')
+        
+        config = TTSConfig(provider="openai", voice="alloy", api_key=api_key)
         tts = create_tts(config)
         print(f"   ✅ Created {tts.__class__.__name__}")
         
