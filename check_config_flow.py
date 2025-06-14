@@ -14,10 +14,10 @@ def check_config_loading():
     # 1. Load config the same way the app does
     print("1. Loading parameters.yaml...")
     try:
-        from app.transcribe import configuration
+        from tsutils import configuration
         
         # This is how the app loads config
-        config = configuration.Config().get_data()
+        config = configuration.Config().data
         
         general = config.get('General', {})
         print("   Config loaded successfully")

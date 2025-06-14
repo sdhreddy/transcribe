@@ -537,6 +537,8 @@ class OpenAIResponder(GPTResponder):
                  save_to_file: bool = False,
                  base_url: str = None):
         logger.info(OpenAIResponder.__name__)
+        print(f"[INIT DEBUG] OpenAIResponder.__init__ called")
+        print(f"[INIT DEBUG] Config has tts_streaming_enabled: {config.get('General', {}).get('tts_streaming_enabled')}")
         self.config = config
         api_key = self.config['OpenAI']['api_key']
         base_url = self.config['OpenAI']['base_url']
