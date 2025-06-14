@@ -33,20 +33,29 @@ class OpenAITTS(BaseTTS):
         self.client = OpenAI(api_key=cfg.api_key or os.getenv("OPENAI_API_KEY"))
 
     def stream(self, text: str):
+        # OpenAI TTS doesn't support true streaming, but we can chunk the response
         resp = self.client.audio.speech.create(
             model="tts-1",
             voice=self.cfg.voice,
             input=text,
-            stream=True,              # critical for streaming!
             response_format="pcm"     # raw PCM for immediate playback
         )
-        # Windows fix: Wrap iter_bytes to handle potential StopIteration bug
+        # Stream the response in chunks for consistent interface
+        # This gives us "pseudo-streaming" - we get the full audio quickly
+        # and then yield it in chunks
         try:
             for chunk in resp.iter_bytes(chunk_size=4096):
                 yield chunk
-        except StopIteration:
-            # Handle OpenAI library bug in versions < 1.14
-            pass
+        except (StopIteration, AttributeError):
+            # If iter_bytes not available, try reading content
+            if hasattr(resp, 'content'):
+                # Yield content in chunks
+                content = resp.content
+                for i in range(0, len(content), 4096):
+                    yield content[i:i+4096]
+            else:
+                # Last resort - read the response
+                yield resp.read()
 
 # ---------- GTTS Fallback (non-streaming but compatible) ---------------------------
 

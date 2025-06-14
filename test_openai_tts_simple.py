@@ -49,13 +49,12 @@ def test_openai_tts():
         )
         print("✓ TTS API call successful (MP3)")
         
-        print("\n3. Testing streaming with PCM...")
+        print("\n3. Testing PCM format...")
         response = client.audio.speech.create(
             model="tts-1",
             voice="alloy",
             input="Testing PCM format.",
-            response_format="pcm",
-            stream=True
+            response_format="pcm"
         )
         
         chunk_count = 0
