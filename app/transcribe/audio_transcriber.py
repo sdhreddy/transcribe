@@ -222,6 +222,8 @@ class AudioTranscriber:   # pylint: disable=C0115, R0902
                     if should_process:
                         self.update_transcript(who_spoke, text, time_spoken)
                         self.transcript_changed_event.set()
+                        logger.info(f"[Response Debug] Transcript changed, triggering GPT response for: '{text[:50]}...'")
+                        print(f"[Response Debug] Transcript changed at {datetime.datetime.utcnow()}")
                     else:
                         logger.info(f"Voice filter: Ignoring transcript from user: {text}")
                         print(f"[INFO] Voice filter: Ignoring transcript from user: {text}")
