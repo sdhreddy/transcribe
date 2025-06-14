@@ -59,7 +59,7 @@ class GPTResponder:
         # Streaming TTS support
         self.buffer = ""
         self.sent_q: queue.Queue[str] = queue.Queue()
-        self.SENT_END = re.compile(r"[.!?](?:\s|$)")  # sentence boundary pattern - requires space after punctuation
+        self.SENT_END = re.compile(r"[.!?]")  # sentence boundary pattern - requires space after punctuation
         
         # Initialize TTS if enabled
         tts_enabled = config.get('General', {}).get('tts_streaming_enabled', False)
@@ -454,6 +454,10 @@ class GPTResponder:
         print(']')
     
     def _handle_streaming_token(self, token: str):
+        """Handle a single token from streaming response."""
+        if not hasattr(self, '_first_token_time'):
+            self._first_token_time = time.time()
+            logger.info(f"[TTS Debug] First GPT token received at {self._first_token_time}")
         """Handle incoming token from LLM stream for TTS processing."""
         if not self.tts_enabled:
             self.streaming_tts_active = True
@@ -469,7 +473,7 @@ class GPTResponder:
             complete_sentence = self.buffer[:match.end()].strip()
             
             # Use min_sentence_chars from config (default 10 if not set)
-            min_chars = self.config.get('General', {}).get('tts_min_sentence_chars', 10)
+            min_chars = self.config.get('General', {}).get('tts_min_sentence_chars', 5)
             
             if complete_sentence and len(complete_sentence) >= min_chars:
                 logger.info(f"[TTS Debug] Sentence detected: '{complete_sentence}' (length: {len(complete_sentence)})")

@@ -127,6 +127,7 @@ class StreamingAudioPlayer(threading.Thread):
                 consecutive_errors = 0
                 
                 self.playing = True
+                logger.info(f"[TTS Debug] Playing chunk immediately: {len(chunk)} bytes, queue has {self.q.qsize()} more")
                 # Windows fix: Use wait=True on newer PyAudio versions for better stability
                 try:
                     bytes_written = self.stream.write(chunk, exception_on_underflow=False)
