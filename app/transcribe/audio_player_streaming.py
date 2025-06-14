@@ -62,6 +62,30 @@ class StreamingAudioPlayer(threading.Thread):
         except queue.Full:
             logger.warning("[TTS Debug] Audio queue full, dropping chunk")
 
+    
+    def recover_audio(self):
+        """Try to recover audio playback after errors."""
+        try:
+            logger.info("[TTS Debug] Attempting audio recovery...")
+            self.stream.stop_stream()
+            self.stream.close()
+            
+            # Reinitialize
+            pa = pyaudio.PyAudio()
+            self.stream = pa.open(
+                format=pyaudio.paInt16,
+                channels=1,
+                rate=self.sample_rate,
+                output=True,
+                output_device_index=self.output_device_index if hasattr(self, 'output_device_index') else None,
+                frames_per_buffer=int(self.sample_rate * (self.buf_ms / 1000))
+            )
+            logger.info("[TTS Debug] Audio recovery successful")
+            return True
+        except Exception as e:
+            logger.error(f"[TTS Debug] Audio recovery failed: {e}")
+            return False
+
     def stop(self):
         """Stop the audio player thread."""
         self.running = False
@@ -69,28 +93,47 @@ class StreamingAudioPlayer(threading.Thread):
 
     def run(self):
         """Main playback loop."""
-        logger.info("Streaming audio player thread started")
+        logger.info("[TTS Debug] Streaming audio player thread started")
+        
+        consecutive_errors = 0
         
         while self.running:
             try:
                 chunk = self.q.get(timeout=1.0)
                 if chunk is None:
+                    logger.info("[TTS Debug] Received stop signal")
                     break
-                    
+                
+                # Reset error counter on successful get
+                consecutive_errors = 0
+                
                 self.playing = True
                 # Windows fix: Use wait=True on newer PyAudio versions for better stability
                 try:
-                    self.stream.write(chunk, exception_on_underflow=False)
+                    bytes_written = self.stream.write(chunk, exception_on_underflow=False)
+                    logger.debug(f"[TTS Debug] Wrote {bytes_written if bytes_written else len(chunk)} bytes")
                 except Exception as e:
                     # Fallback for older PyAudio versions
-                    self.stream.write(chunk)
+                    try:
+                        self.stream.write(chunk)
+                    except Exception as e2:
+                        logger.error(f"[TTS Debug] Failed to write audio: {e2}")
+                        consecutive_errors += 1
+                        if consecutive_errors > 5:
+                            logger.error("[TTS Debug] Too many audio errors, stopping player")
+                            break
+                
                 self.playing = False
                 
             except queue.Empty:
                 continue
             except Exception as e:
-                logger.error(f"Audio playback error: {e}")
+                logger.error(f"[TTS Debug] Audio playback error: {type(e).__name__}: {e}")
+                consecutive_errors += 1
+                if consecutive_errors > 5:
+                    logger.error("[TTS Debug] Too many errors, stopping player")
+                    break
                 
         self.stream.stop_stream()
         self.stream.close()
-        logger.info("Streaming audio player thread stopped")
+        logger.info("[TTS Debug] Streaming audio player thread stopped")

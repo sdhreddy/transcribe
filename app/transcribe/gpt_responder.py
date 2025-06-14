@@ -468,7 +468,7 @@ class GPTResponder:
             if complete_sentence and len(complete_sentence) >= min_chars:
                 logger.info(f"[TTS Debug] Sentence detected: '{complete_sentence}' (length: {len(complete_sentence)})")
                 self.sent_q.put(complete_sentence)
-                self.buffer = self.buffer[match.end()]
+                self.buffer = self.buffer[match.end():].lstrip()
                 logger.info(f"[TTS Debug] Remaining buffer: '{self.buffer}'")
             else:
                 logger.info(f"[TTS Debug] Sentence too short ({len(complete_sentence)} chars): '{complete_sentence}'")
@@ -483,6 +483,16 @@ class GPTResponder:
                     logger.info(f"[TTS Debug] Comma break: '{partial}'")
                     self.sent_q.put(partial)
                     self.buffer = self.buffer[comma_pos+1:].strip()
+                # Periodic flush check - don't let buffer grow too large
+        elif len(self.buffer) > 30 and ' ' in self.buffer:
+            # Find last space and break there
+            last_space = self.buffer.rfind(' ')
+            if last_space > 15:
+                partial = self.buffer[:last_space].strip()
+                if partial:
+                    logger.info(f"[TTS Debug] Periodic flush at space: '{partial}'")
+                    self.sent_q.put(partial)
+                    self.buffer = self.buffer[last_space:].lstrip()
         elif len(self.buffer) > 42:  # Matches the OpenAI recommendation
             # Send what we have so far
             if self.buffer.strip():
@@ -528,6 +538,7 @@ class GPTResponder:
     def flush_tts_buffer(self):
         """Flush any remaining text in buffer when streaming completes."""
         if self.tts_enabled and self.buffer.strip():
+            logger.info(f"[TTS Debug] Flushing remaining buffer: '{self.buffer.strip()}'")
             self.sent_q.put(self.buffer.strip())
             self.buffer = ""
     
