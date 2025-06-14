@@ -60,7 +60,10 @@ class GPTResponder:
         self.SENT_END = re.compile(r"[.!?]\s")  # sentence boundary pattern - requires space after punctuation
         
         # Initialize TTS if enabled
-        if config.get('General', {}).get('tts_streaming_enabled', False):
+        tts_enabled = config.get('General', {}).get('tts_streaming_enabled', False)
+        logger.info(f"[TTS Debug] TTS streaming enabled: {tts_enabled}")
+        
+        if tts_enabled:
             tts_config = TTSConfig(
                 provider=config.get('General', {}).get('tts_provider', 'gtts'),
                 voice=config.get('General', {}).get('tts_voice', 'alloy'),
@@ -73,7 +76,8 @@ class GPTResponder:
             self.tts_worker_thread = threading.Thread(target=self._tts_worker, daemon=True)
             self.tts_worker_thread.start()
             self.tts_enabled = True
-            logger.info("Streaming TTS initialized")
+            logger.info(f"[TTS Debug] Streaming TTS initialized with provider: {tts_config.provider}")
+            logger.info(f"[TTS Debug] Voice: {tts_config.voice}, Sample rate: {tts_config.sample_rate}")
         else:
             self.tts_enabled = False
         # Track current request to allow cancellation
@@ -446,6 +450,7 @@ class GPTResponder:
             return
             
         self.buffer += token
+        logger.info(f"[TTS Debug] Token received: '{token}' | Buffer length: {len(self.buffer)}")
         
         # Check for sentence boundary
         match = self.SENT_END.search(self.buffer)
@@ -457,19 +462,25 @@ class GPTResponder:
             min_chars = self.config.get('General', {}).get('tts_min_sentence_chars', 10)
             
             if complete_sentence and len(complete_sentence) >= min_chars:
+                logger.info(f"[TTS Debug] Sentence detected: '{complete_sentence}' (length: {len(complete_sentence)})")
                 self.sent_q.put(complete_sentence)
-                self.buffer = self.buffer[match.end():]
+                self.buffer = self.buffer[match.end()]
+                logger.info(f"[TTS Debug] Remaining buffer: '{self.buffer}'")
+            else:
+                logger.info(f"[TTS Debug] Sentence too short ({len(complete_sentence)} chars): '{complete_sentence}'")
         
         # Force a break if buffer gets too long without punctuation
         elif len(self.buffer) > 42:  # Matches the OpenAI recommendation
             # Send what we have so far
             if self.buffer.strip():
+                logger.info(f"[TTS Debug] Force break at {len(self.buffer)} chars: '{self.buffer.strip()}'")
                 self.sent_q.put(self.buffer.strip())
                 self.buffer = ""
     
     def _tts_worker(self):
         """Worker thread that converts sentences to speech and plays them."""
-        logger.info("TTS worker thread started")
+        logger.info("[TTS Debug] TTS worker thread started")
+        logger.info(f"[TTS Debug] TTS provider: {self.tts.__class__.__name__}")
         
         while True:
             try:
@@ -477,11 +488,20 @@ class GPTResponder:
                 if sentence is None:  # Shutdown signal
                     break
                     
-                logger.info(f"TTS processing: {len(sentence)} chars")
+                logger.info(f"[TTS Debug] TTS processing sentence: '{sentence}' ({len(sentence)} chars)")
+                start_time = time.time()
                 
                 # Stream TTS audio
+                chunk_count = 0
                 for audio_chunk in self.tts.stream(sentence):
+                    if chunk_count == 0:
+                        first_chunk_time = time.time() - start_time
+                        logger.info(f"[TTS Debug] First audio chunk received in {first_chunk_time*1000:.0f}ms")
+                    chunk_count += 1
                     self.player.enqueue(audio_chunk)
+                
+                total_time = time.time() - start_time
+                logger.info(f"[TTS Debug] TTS completed: {chunk_count} chunks in {total_time*1000:.0f}ms")
                     
             except queue.Empty:
                 continue
