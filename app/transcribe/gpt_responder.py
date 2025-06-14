@@ -59,7 +59,7 @@ class GPTResponder:
         # Streaming TTS support
         self.buffer = ""
         self.sent_q: queue.Queue[str] = queue.Queue()
-        self.SENT_END = re.compile(r"[.!?]\s")  # sentence boundary pattern - requires space after punctuation
+        self.SENT_END = re.compile(r"[.!?](?:\s|$)")  # sentence boundary pattern - requires space after punctuation
         
         # Initialize TTS if enabled
         tts_enabled = config.get('General', {}).get('tts_streaming_enabled', False)
@@ -474,6 +474,15 @@ class GPTResponder:
                 logger.info(f"[TTS Debug] Sentence too short ({len(complete_sentence)} chars): '{complete_sentence}'")
         
         # Force a break if buffer gets too long without punctuation
+                # Also check for commas for more natural breaks
+        elif ',' in self.buffer and len(self.buffer) > 20:
+            comma_pos = self.buffer.rfind(',')
+            if comma_pos > 10:  # Ensure we have enough content
+                partial = self.buffer[:comma_pos+1].strip()
+                if partial:
+                    logger.info(f"[TTS Debug] Comma break: '{partial}'")
+                    self.sent_q.put(partial)
+                    self.buffer = self.buffer[comma_pos+1:].strip()
         elif len(self.buffer) > 42:  # Matches the OpenAI recommendation
             # Send what we have so far
             if self.buffer.strip():
@@ -488,7 +497,7 @@ class GPTResponder:
         
         while True:
             try:
-                sentence = self.sent_q.get(timeout=1.0)
+                sentence = self.sent_q.get(timeout=0.5)  # Keep worker alive
                 if sentence is None:  # Shutdown signal
                     break
                     
@@ -510,7 +519,9 @@ class GPTResponder:
             except queue.Empty:
                 continue
             except Exception as e:
-                logger.error(f"TTS worker error: {e}")
+                logger.error(f"[TTS Debug] TTS worker error: {type(e).__name__}: {e}")
+                # Don't let the worker die - continue processing
+                continue
                 
         logger.info("TTS worker thread stopped")
     
