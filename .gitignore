@@ -46,3 +46,33 @@ app/transcribe/override.yaml
 
 # Test results
 test_results/
+
+# Instructions and documentation (private)
+PUSH_INSTRUCTIONS.md
+*_INSTRUCTIONS.md
+CODEX_*.md
+TODO.md
+NOTES.md
+DEBUG_*.md
+FIX_*.md
+TEST_*.md
+
+# Debug and monitoring files
+monitor_*.py
+debug_*.py
+test_*.py
+fix_*.py
+run_*.py
+ci_*.py
+
+# Temporary files
+.push_temp.sh
+*.tmp
+*.bak
+.git-credentials
+
+# Test outputs and logs
+*.log
+test_output/
+debug_output/
+comprehensive_test_results.txt
