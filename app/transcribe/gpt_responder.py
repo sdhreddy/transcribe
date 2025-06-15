@@ -377,7 +377,7 @@ class GPTResponder:
                                                   update_previous=True)
                         self._handle_streaming_token(message_text)
                 self.streaming_tts_active = False  # Clear flag
-            self.streaming_complete.set()
+                self.streaming_complete.set()
                 self.flush_tts_buffer()
                 
 

@@ -1,0 +1,60 @@
+{
+  "timestamp": "2025-06-14T19:40:35.232449",
+  "total_duration": 0.184983491897583,
+  "summary": {
+    "total": 8,
+    "passed": 2,
+    "failed": 6,
+    "errors": 0
+  },
+  "tests": [
+    {
+      "name": "Configuration Check",
+      "status": "FAIL",
+      "duration": 0.06309890747070312,
+      "error": null
+    },
+    {
+      "name": "Module Imports",
+      "status": "FAIL",
+      "duration": 0.11909651756286621,
+      "error": null
+    },
+    {
+      "name": "GPT Responder Timing",
+      "status": "FAIL",
+      "duration": 0.00035262107849121094,
+      "error": null
+    },
+    {
+      "name": "Audio Flow Simulation",
+      "status": "FAIL",
+      "duration": 0.0004336833953857422,
+      "error": null
+    },
+    {
+      "name": "Sentence Detection",
+      "status": "PASS",
+      "duration": 0.00011110305786132812,
+      "error": null
+    },
+    {
+      "name": "TTS Provider Creation",
+      "status": "FAIL",
+      "duration": 0.00030517578125,
+      "error": null
+    },
+    {
+      "name": "Audio Player Creation",
+      "status": "FAIL",
+      "duration": 0.00028967857360839844,
+      "error": null
+    },
+    {
+      "name": "Response Timing Logs",
+      "status": "PASS",
+      "duration": 0.0001201629638671875,
+      "error": null
+    }
+  ]
+}
